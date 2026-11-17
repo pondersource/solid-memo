@@ -62,7 +62,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       sha: ${{ steps.fork.outputs.sha || steps.release.outputs.sha }}
-      parent: ${{ steps.fork.outputs.parent || steps.release.outputs.parent }}
+      parent: ${{ steps.release.outputs.parent }}
       tag: ${{ steps.tag.outputs.tag }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -74,7 +74,6 @@ jobs:
         if: github.repository == 'pondersource/solid-memo' && github.event_name == 'workflow_dispatch'
         run: |
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-          echo "parent=$(git rev-parse HEAD^)" >> "$GITHUB_OUTPUT"
       # release.yml pushes the tag just after the release commit, and CI on
       # that commit takes minutes, so the tag is there by now; for a release
       # commit, the fetch is tried a few times in case it is not yet. Only
