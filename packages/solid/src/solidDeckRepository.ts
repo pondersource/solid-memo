@@ -6,6 +6,6 @@ import { createFlashcards, type FlashcardsOptions } from "./flashcards";
 
 export type SolidDeckRepositoryDeps = FlashcardsOptions;
 
-export const createSolidDeckRepository: (options: SolidDeckRepositoryDeps) => ReturnType<
-  typeof createFlashcards
-> = createFlashcards;
+export const createSolidDeckRepository: (
+  options: SolidDeckRepositoryDeps,
+) => ReturnType<typeof createFlashcards> = createFlashcards;
