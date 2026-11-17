@@ -30,6 +30,19 @@ module, such as `solidSessionGateway`, `solidDeckRepository`,
 a fake sign-in client for tests, and the contract tests every
 implementation of the client modules passes (`contract/`).
 
+## Flashcards data module
+
+`@solid-memo/solid/flashcards` exports `createFlashcards`. Pass an
+authenticated fetch and the dependencies listed in `FlashcardsOptions`.
+The returned `DeckRepository` reads and writes decks and cards in an
+existing Solid Memo instance. It uses the published
+[dataset layout](../../docs/data-model.md) and
+[versioned shapes](../../docs/shapes.md).
+
+The caller provides the instance URL and owns sign-in and discovery. The
+module uses the same document operations as Solid Memo. LWS servers must
+accept the requests described in [Linked Web Storage](../../docs/lws.md).
+
 ## Boundaries
 
 It may import `application`, `domain`, `vocab` and `shacl`, and
