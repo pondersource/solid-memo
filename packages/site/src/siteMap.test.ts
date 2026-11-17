@@ -54,8 +54,8 @@ describe("siteOrigin", () => {
     expect(() => siteOrigin(dir)).toThrow(/EISDIR/);
   });
 
-  it("reads this repository's CNAME as solid-memo.com", () => {
-    expect(siteOrigin(join(REPOSITORY_ROOT, "CNAME"))).toBe("https://solid-memo.com");
+  it("reads this repository's CNAME as solid-memo.pondersource.com", () => {
+    expect(siteOrigin(join(REPOSITORY_ROOT, "CNAME"))).toBe("https://solid-memo.pondersource.com");
   });
 });
 
