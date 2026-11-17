@@ -79,14 +79,14 @@
        VITE_APP_NAME, and the repository in the JSON-LD and the noscript
        link is VITE_REPO_URL, put in by vite.config.ts
        (docs/configuration.md). -->
-  <link rel="canonical" href="https://solid-memo.com/" />
+  <link rel="canonical" href="https://solid-memo.pondersource.com/" />
   <meta name="robots" content="index, follow" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="%APP_NAME%" />
   <meta property="og:title" content="%APP_NAME%" />
   <meta property="og:description" content="Spaced-repetition flashcards that live in your own Solid pod. Try it without an account." />
-  <meta property="og:url" content="https://solid-memo.com/" />
-  <meta property="og:image" content="https://solid-memo.com/social-preview.png" />
+  <meta property="og:url" content="https://solid-memo.pondersource.com/" />
+  <meta property="og:image" content="https://solid-memo.pondersource.com/social-preview.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="The Solid Memo wordmark beside &quot;Spaced-repetition flashcards in your own Solid pod. Your decks, your progress, your data. Try it without an account.&quot;" />
@@ -104,14 +104,14 @@
       "@graph": [
         {
           "@type": "WebApplication",
-          "@id": "https://solid-memo.com/#app",
+          "@id": "https://solid-memo.pondersource.com/#app",
           "name": %APP_NAME_JSON%,
-          "url": "https://solid-memo.com/",
+          "url": "https://solid-memo.pondersource.com/",
           "description": "Spaced-repetition flashcards that live in your own Solid pod.",
           "applicationCategory": "EducationalApplication",
           "operatingSystem": "Any",
           "browserRequirements": "Requires JavaScript",
-          "image": "https://solid-memo.com/social-preview.png",
+          "image": "https://solid-memo.pondersource.com/social-preview.png",
           "inLanguage": ["en", "sv", "ko", "de", "es", "fr"],
           "license": "https://spdx.org/licenses/MIT",
           "sameAs": [%REPO_URL_JSON%],
@@ -120,13 +120,13 @@
         },
         {
           "@type": "SoftwareSourceCode",
-          "@id": "https://solid-memo.com/#source",
+          "@id": "https://solid-memo.pondersource.com/#source",
           "name": %APP_NAME_JSON%,
           "codeRepository": %REPO_URL_JSON%,
           "license": "https://spdx.org/licenses/MIT",
           "programmingLanguage": "TypeScript",
           "inLanguage": "en",
-          "targetProduct": { "@id": "https://solid-memo.com/#app" }
+          "targetProduct": { "@id": "https://solid-memo.pondersource.com/#app" }
         }
       ]
     }
@@ -140,21 +140,21 @@
   <script type="application/ld+json">
     {
       "@context": "https://store.stucco.software/schema",
-      "@id": "https://solid-memo.com/",
+      "@id": "https://solid-memo.pondersource.com/",
       "@type": ["Application", "Solid"],
       "title": %APP_NAME_JSON%,
       "subtitle": "Spaced-repetition flashcards and courses",
       "description": "A flashcard app with spaced repetition that keeps your cards and study progress in your own Pod. Comes with ready-made decks and courses, including a course on Solid fundamentals, and lets you write your own decks. Try it as a guest before connecting a Pod.",
-      "logo": "https://solid-memo.com/favicon.svg",
+      "logo": "https://solid-memo.pondersource.com/favicon.svg",
       "price": { "amount": 0 },
       "purchases": false,
       "developer": "https://github.com/solid-memo",
       "category": ["Education"],
       "previews": [
-        "https://solid-memo.com/screenshots/study.png",
-        "https://solid-memo.com/screenshots/decks.png",
-        "https://solid-memo.com/screenshots/library.png",
-        "https://solid-memo.com/screenshots/statistics.png"
+        "https://solid-memo.pondersource.com/screenshots/study.png",
+        "https://solid-memo.pondersource.com/screenshots/decks.png",
+        "https://solid-memo.pondersource.com/screenshots/library.png",
+        "https://solid-memo.pondersource.com/screenshots/statistics.png"
       ],
       "language": ["en", "sv", "ko", "de", "es", "fr"]
     }
