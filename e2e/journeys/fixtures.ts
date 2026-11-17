@@ -213,6 +213,10 @@ async function instrument(context: BrowserContext, found: Diagnostics): Promise<
   await context.addInitScript(beat, HEARTBEAT);
   // Routing every request turns Chromium's HTTP cache off: the app loads everything afresh, as on a first visit.
   const deployedOrigin = process.env.JOURNEY_APP_URL && new URL(process.env.JOURNEY_APP_URL).origin;
+  // The CI pod is on loopback. Grant this test origin the permission a user can grant.
+  if (deployedOrigin) {
+    await context.grantPermissions(["local-network-access"], { origin: deployedOrigin });
+  }
   await context.route("**/*", (route) => {
     const url = new URL(route.request().url());
     if (url.hostname === "127.0.0.1" || url.origin === deployedOrigin) return route.fallback();

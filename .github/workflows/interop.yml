@@ -154,7 +154,7 @@ jobs:
           browser: chromium
       # compare.ts says whether the run went as expected, not Playwright.
       - id: journeys
-        run: npm run journeys -- --project=chromium -g @smoke
+        run: npm run journeys -- --project=chromium -g '@smoke|deleting an instance keeps another app'
       - if: always()
         run: node e2e/journeys/harness/summary.ts journeys-${{ matrix.server }}-${{ github.run_attempt }}
       # Every failed journey's trace, expected or not.
