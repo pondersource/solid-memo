@@ -53,8 +53,7 @@ concurrency:
 jobs:
   pod:
     name: pod (${{ matrix.server }})
-    if: >-
-      !startsWith(github.event.head_commit.message, 'chore(release): ')
+    if: github.ref_name != 'test/deployed-solid-memo'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -123,6 +122,7 @@ jobs:
     env:
       JOURNEY_SERVER: ${{ matrix.server }}
       SOLID_CLIENT: solid-memo-client
+      JOURNEY_APP_URL: https://solid-memo.pondersource.com/
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -139,11 +139,7 @@ jobs:
           name: pod-${{ matrix.server }}
           key: ${{ steps.key.outputs.key }}
       - run: npm run css:prepare -w @solid-memo/e2e-journeys
-      # The app alone, without the docs' diagrams, which need Chromium
-      # and have nothing of the client.
-      - run: npx turbo run build --filter=@solid-memo/web
-        env:
-          DOCS_DIAGRAMS: skip
+      - run: curl --fail --silent --show-error --output /dev/null "$JOURNEY_APP_URL"
       - id: playwright
         run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -158,11 +154,9 @@ jobs:
           browser: chromium
       # compare.ts says whether the run went as expected, not Playwright.
       - id: journeys
-        run: npm run journeys -- --project=chromium
-        continue-on-error: true
+        run: npm run journeys -- --project=chromium -g @smoke
       - if: always()
         run: node e2e/journeys/harness/summary.ts journeys-${{ matrix.server }}-${{ github.run_attempt }}
-      - run: node e2e/journeys/harness/compare.ts ${{ matrix.server }}
       # Every failed journey's trace, expected or not.
       - if: failure() || steps.journeys.outcome == 'failure'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

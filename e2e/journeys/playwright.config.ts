@@ -13,7 +13,8 @@ import { noonTimeZone } from "./harness/timezone.ts";
  * playwright show-trace`), a video, and what fixtures.ts gathers.
  */
 const CI = process.env.CI !== undefined && process.env.CI !== "";
-const APP = "http://127.0.0.1:4173/";
+const deployedApp = process.env.JOURNEY_APP_URL;
+const APP = deployedApp ?? "http://127.0.0.1:4173/";
 const TRACE_MODES = ["on", "off", "retain-on-failure"] as const;
 const trace = process.env.JOURNEY_TRACE || "retain-on-failure";
 if (!(TRACE_MODES as readonly string[]).includes(trace))
@@ -102,7 +103,7 @@ export default defineConfig({
   ],
   // The built app (npm run build -w @solid-memo/web), the Studio, its deck
   // library and shapes included; 127.0.0.1 is a secure context, so http will do.
-  webServer: {
+  webServer: deployedApp ? undefined : {
     command: "npm run preview -w @solid-memo/web -- --host 127.0.0.1 --port 4173 --strictPort",
     cwd: "../..",
     url: APP,

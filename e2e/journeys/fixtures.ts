@@ -212,9 +212,10 @@ async function instrument(context: BrowserContext, found: Diagnostics): Promise<
   );
   await context.addInitScript(beat, HEARTBEAT);
   // Routing every request turns Chromium's HTTP cache off: the app loads everything afresh, as on a first visit.
+  const deployedOrigin = process.env.JOURNEY_APP_URL && new URL(process.env.JOURNEY_APP_URL).origin;
   await context.route("**/*", (route) => {
     const url = new URL(route.request().url());
-    if (url.hostname === "127.0.0.1") return route.fallback();
+    if (url.hostname === "127.0.0.1" || url.origin === deployedOrigin) return route.fallback();
     found.blockedRequests.push(url.href);
     return route.abort("blockedbyclient");
   });
