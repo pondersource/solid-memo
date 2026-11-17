@@ -61,20 +61,27 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
-      sha: ${{ steps.release.outputs.sha }}
-      parent: ${{ steps.release.outputs.parent }}
+      sha: ${{ steps.fork.outputs.sha || steps.release.outputs.sha }}
+      parent: ${{ steps.fork.outputs.parent || steps.release.outputs.parent }}
       tag: ${{ steps.tag.outputs.tag }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Select the Ponder Source deployment commit
+        id: fork
+        if: github.repository == 'pondersource/solid-memo' && github.event_name == 'workflow_dispatch'
+        run: |
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "parent=$(git rev-parse HEAD^)" >> "$GITHUB_OUTPUT"
       # release.yml pushes the tag just after the release commit, and CI on
       # that commit takes minutes, so the tag is there by now; for a release
       # commit, the fetch is tried a few times in case it is not yet. Only
       # a plain version tag (vX.Y.Z) counts, and by hand only one on main.
       - name: A version tag names the commit
         id: tag
+        if: steps.fork.outputs.sha == ''
         env:
           EVENT: ${{ github.event_name }}
           SHA: ${{ github.event.workflow_run.head_sha }}
@@ -255,6 +262,9 @@ jobs:
       - if: github.event_name == 'workflow_dispatch'
         run: npm run check
       - if: github.event_name == 'workflow_dispatch' || hashFiles('scripts/siteVersion.ts') == ''
+        env:
+          SOLID_CLIENT: ${{ github.repository == 'pondersource/solid-memo' && 'solid-memo-client' || '' }}
+          VITE_REPO_URL: ${{ github.repository == 'pondersource/solid-memo' && 'https://github.com/pondersource/solid-memo' || '' }}
         run: npm run build
       # The artifact is the whole site: the app, and beside it what the
       # build writes: ns/, decks/, the vendored shapes, robots.txt, the
