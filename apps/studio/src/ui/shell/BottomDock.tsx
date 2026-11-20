@@ -8,7 +8,7 @@ import { useI18n } from "@solid-memo/ui/i18n";
 import type { StudioRoute } from "../router";
 import type { ActivityEntry } from "./activity";
 import { clampSize, DOCK_HEIGHT, scaledPane } from "./splitter";
-import { Splitter } from "./Splitter";
+import { Splitter } from "./DockSplitter";
 
 /** The dock's tabs, in their order. */
 export type DockTab = "problems" | "activity";

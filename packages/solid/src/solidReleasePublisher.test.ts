@@ -67,7 +67,9 @@ async function publisherPod({
   grant = fakeGrant,
   dataLimits,
   servedAccessControl,
+  modulePublishing,
 }: {
+  modulePublishing?: Parameters<typeof createSolidReleasePublisher>[0]["modulePublishing"];
   wac?: boolean;
   acp?: boolean;
   acl?: (url: string, reads: number) => string;
@@ -124,6 +126,7 @@ async function publisherPod({
     shareFetch: createPodFence(fetch, { accessControl: true }),
     publicFetch,
     grantPublicRead: grant,
+    modulePublishing,
   });
   /** The writes made since `from`, as method and URL, with If-None-Match: * when it was sent. */
   const writes = (from = 0) =>
@@ -792,4 +795,20 @@ describe("isPublic and listPublished", () => {
     const { publisher } = await publisherPod();
     await expect(publisher.listPublished(`${POD}solid-memo/other/`)).resolves.toEqual([]);
   });
+});
+
+it("publishes through the rs module and checks its provider link without changing Solid ACLs", async () => {
+  const modulePublishing = {
+    publish: vi.fn(async () => RELEASE),
+    getPublicURL: vi.fn(async (): Promise<string | undefined> => RELEASE),
+  };
+  const { publisher, sent, publicFetch } = await publisherPod({ modulePublishing });
+  modulePublishing.getPublicURL.mockResolvedValueOnce(undefined);
+  expect(await publisher.isPublic(RELEASE)).toBe(false);
+  expect(publicFetch).not.toHaveBeenCalled();
+  expect(await publisher.publicUrl!(RELEASE)).toBe(RELEASE);
+  expect(await publisher.isPublic(RELEASE)).toBe(true);
+  await publisher.publish(INSTANCE, TURTLE, RELEASE);
+  expect(modulePublishing.publish).toHaveBeenCalledWith(RELEASE);
+  expect(sent.filter((value) => value.startsWith("PATCH") && value.includes(".acl"))).toEqual([]);
 });

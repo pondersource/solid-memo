@@ -746,7 +746,7 @@ jobs:
       # Chromium's share of the journeys, from the list of them all, so a
       # journey added or moved is in exactly one shard.
       - id: shard
-        if: matrix.shard
+        if: matrix.shard && github.repository != 'pondersource/solid-memo'
         working-directory: e2e/journeys
         env:
           SHARD: ${{ matrix.shard }}
@@ -781,7 +781,12 @@ jobs:
           JOURNEYS: ${{ steps.shard.outputs.journeys }}
           DEBUG: ${{ matrix.debug }}
           DEBUG_COLORS: "0"
+          REPOSITORY: ${{ github.repository }}
         run: |
+          if [ "$REPOSITORY" = pondersource/solid-memo ]; then
+            npm run journeys -- rs-modules ${{ matrix.projects }}
+            exit 0
+          fi
           read -ra journeys <<< "$JOURNEYS"
           npm run journeys -- ${{ matrix.projects }} "${journeys[@]}"
       - if: always()

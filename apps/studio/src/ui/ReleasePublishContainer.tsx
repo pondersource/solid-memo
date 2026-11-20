@@ -56,6 +56,13 @@ export function ReleasePublishContainer({
     // Asked of an address a release may have only: the draft is data anyone may have written.
     enabled: released !== undefined && isPublishedReleaseUrl(released),
   });
+  const shareLinkQuery = useQuery({
+    queryKey: queryKeys.releaseShareLink(released, publicQuery.data),
+    queryFn: async () =>
+      (await useCases.listPublishedReleases(instanceUrl)).find((item) => item.url === released)
+        ?.shareUrl ?? null,
+    enabled: released !== undefined && publicQuery.data === true,
+  });
   const publishMutation = useMutation({
     scope: { id: catalogScope(instanceUrl) },
     mutationFn: (url: string) =>
@@ -86,6 +93,7 @@ export function ReleasePublishContainer({
         run: (url) => publishMutation.mutate(url),
       }}
       isPublic={publicQuery.data}
+      shareUrl={shareLinkQuery.data}
       makePublic={{
         pending: publicMutation.isPending,
         error: errorText(publicMutation.error),

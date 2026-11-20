@@ -207,3 +207,22 @@ the query's own function, never `hashKey`.
   script checks it.
 - Every seam is injectable, making 100% unit coverage per package
   practical ([testing.md](testing.md)).
+
+## PonderSource storage
+
+The PonderSource fork uses rs.js and its connection widget. Its Flashcards
+module owns all flashcards scope reads and writes. The module preserves the
+existing RDF data model, including decks, cards, study history, and releases.
+It imports existing Solid data without changing the source documents.
+Public sharing creates a separate public copy of a selected release.
+
+The web app receives a storage session and module API through composition.
+It doesn't open a scope client or send authenticated storage requests itself.
+The pinned runtime sources and licenses are in `apps/web/public/storage/`.
+
+The fork's browser checks run `rs-modules.journey.ts` through the widget:
+create a deck and cards, study them, open them on a fresh device, reload the
+Studio route, publish a release, read it without login, and disconnect.
+The original direct Solid login journeys remain available for the original
+application adapter. Package tests still cover that adapter and require full
+coverage. Google and Dropbox account tests require their registered callbacks.

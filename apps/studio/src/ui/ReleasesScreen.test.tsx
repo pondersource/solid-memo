@@ -340,3 +340,10 @@ describe("ReleasesScreen", () => {
     ).toBeDisabled();
   });
 });
+
+it("uses the module's public URL for the release link and displayed address", () => {
+  const shareUrl = "https://provider.example/shared/file";
+  renderScreen({ releases: [{ url: SOLID, public: true, shareUrl }] });
+  expect(document.querySelector(`a[href="${shareUrl}"]`)).not.toBeNull();
+  expect(screen.getByText(shareUrl)).toBeInTheDocument();
+});

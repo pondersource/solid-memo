@@ -733,6 +733,8 @@ export interface ReleaseDraftRepository {
  * document alone.
  */
 export interface ReleasePublisher {
+  /** Public provider URL, when different from the stable document identifier. */
+  publicUrl?(url: string): Promise<string | undefined>;
   /**
    * Write the release's text at `targetUrl`, only if nothing is there
    * (If-None-Match: *; else releaseTaken, with nothing written: a

@@ -28,6 +28,7 @@
       "!.devcontainer/devcontainer-lock.json",
       // Kept byte for byte as their authors publish them.
       "!packages/vocab/vendor",
+      "!apps/web/public/storage",
       // Turtle and its published versions, formatted by `npm run format:turtle`.
       "!decks",
       "!ns",

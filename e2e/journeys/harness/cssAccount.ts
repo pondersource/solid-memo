@@ -120,7 +120,10 @@ export async function createAccount(
   );
   const { pod, webId } = createdPod(
     await json(
-      await api.post(controls.account.pod, { headers, data: { name } }),
+      await api.post(controls.account.pod, {
+        headers,
+        data: { name, settings: { linkStorage: true } },
+      }),
       "Creating the pod",
     ),
   );

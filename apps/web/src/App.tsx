@@ -47,6 +47,8 @@ export function App(props: SiteProps) {
 }
 
 interface SiteProps {
+  connectStorage?: () => void;
+  subscribeStorage?: (listener: () => void) => () => void;
   useCases: UseCases;
   source: SiteSource;
   appName: string;
@@ -54,7 +56,15 @@ interface SiteProps {
   loadStudio: () => Promise<StudioModule>;
 }
 
-function Site({ useCases, source, appName, providers, loadStudio }: SiteProps) {
+function Site({
+  useCases,
+  source,
+  appName,
+  providers,
+  loadStudio,
+  connectStorage,
+  subscribeStorage,
+}: SiteProps) {
   const [inStudio, setInStudio] = useState(() => isStudioHash(window.location.hash));
   // A link from one app to the other is a hash link within the page.
   useEffect(() => {
@@ -80,6 +90,8 @@ function Site({ useCases, source, appName, providers, loadStudio }: SiteProps) {
 
   return (
     <AppShell
+      connectStorage={connectStorage}
+      subscribeStorage={subscribeStorage}
       useCases={useCases}
       source={source}
       appName={appName}

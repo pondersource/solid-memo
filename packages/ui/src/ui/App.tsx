@@ -115,6 +115,8 @@ export function AppShell({
   source,
   appName,
   providers,
+  connectStorage,
+  subscribeStorage,
   identity,
   workspace,
 }: {
@@ -125,6 +127,8 @@ export function AppShell({
   appName?: string;
   /** The Pod providers suggested at login and for creating a Pod. */
   providers: readonly PodProvider[];
+  connectStorage?: () => void;
+  subscribeStorage?: (listener: () => void) => () => void;
   identity: AppIdentity;
   workspace: ComponentType<WorkspaceProps>;
 }) {
@@ -272,6 +276,8 @@ export function AppShell({
             <AppVersion.Provider value={source.version}>
               <SkipLink />
               <AppContent
+                connectStorage={connectStorage}
+                subscribeStorage={subscribeStorage}
                 useCases={useCases}
                 source={source}
                 providers={providers}
@@ -338,12 +344,16 @@ function AppContent({
   useCases,
   source,
   providers,
+  connectStorage,
+  subscribeStorage,
   identity,
   workspace: AppWorkspace,
 }: {
   useCases: UseCases;
   source: SiteSource;
   providers: readonly PodProvider[];
+  connectStorage?: () => void;
+  subscribeStorage?: (listener: () => void) => () => void;
   identity: AppIdentity;
   workspace: ComponentType<WorkspaceProps>;
 }) {
@@ -402,6 +412,23 @@ function AppContent({
       }
     })();
   }, [useCases]);
+
+  useEffect(
+    () =>
+      subscribeStorage?.(() => {
+        void useCases
+          .restoreSession()
+          .then((established) => {
+            if (established) {
+              setSession(established.session);
+              setConnecting(false);
+              setAuthError(null);
+            }
+          })
+          .catch(setAuthError);
+      }),
+    [useCases, subscribeStorage],
+  );
 
   useEffect(() => {
     return useCases.onSessionExpired(() => leaveSession(SESSION_EXPIRED));
@@ -555,6 +582,7 @@ function AppContent({
             </div>
           )}
           <OnboardingFlow
+            connectStorage={connectStorage}
             key={landingVisit}
             providers={providers}
             busy={busy}

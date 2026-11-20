@@ -7,6 +7,7 @@ import { createPodFence } from "@solid-memo/solid/podFence";
 import { createWriteFence } from "@solid-memo/solid/writeFence";
 import { anonymousFetch } from "@solid-memo/solid/authFetch";
 import { READ_DEADLINE_MS, WHOLE_READ_MS, withReadDeadline } from "@solid-memo/solid/readDeadline";
+import type { SolidSession } from "@solid-memo/solid/solidSession";
 import { createSolidSession } from "@solid-memo/solid/solidSession";
 import { createShaclShapeValidator } from "@solid-memo/solid/shaclShapeValidator";
 import { SHAPES_BASE, SITE, VOCAB_BASE } from "@solid-memo/vocab/ns";
@@ -20,7 +21,10 @@ import { createSolidInstanceRepository } from "@solid-memo/solid/solidInstanceRe
 import { createSolidPaletteRepository } from "@solid-memo/solid/solidPaletteRepository";
 import { createSolidPreferencesRepository } from "@solid-memo/solid/solidPreferencesRepository";
 import { createSolidReleaseDraftRepository } from "@solid-memo/solid/solidReleaseDraftRepository";
-import { createSolidReleasePublisher } from "@solid-memo/solid/solidReleasePublisher";
+import {
+  createSolidReleasePublisher,
+  type ModulePublishing,
+} from "@solid-memo/solid/solidReleasePublisher";
 import { createBrowserFileExchange } from "@solid-memo/browser/fileExchange";
 import { createLocalStorageLanguagePreference } from "@solid-memo/browser/localStorageLanguagePreference";
 import { createLocalStorageCustomPalettePreference } from "@solid-memo/browser/localStorageCustomPalettePreference";
@@ -58,6 +62,8 @@ import { createTrialUseCases } from "./trialUseCases";
 
 /** What an app built on the use cases says of itself and of the page it runs in. */
 export interface AppOptions {
+  storageSession?: SolidSession;
+  modulePublishing?: ModulePublishing;
   /** The name the app gives itself when the user logs in (docs/authentication.md). */
   clientName: string;
   /** The Client ID Document the build wrote, if any: the client ID on the site it was written for (docs/authentication.md#the-client-id-document). */
@@ -83,6 +89,8 @@ export interface AppOptions {
  * result to its components.
  */
 export function createAppUseCases({
+  storageSession,
+  modulePublishing,
   clientName,
   clientId,
   servedSite,
@@ -91,12 +99,14 @@ export function createAppUseCases({
   indexedDB,
 }: AppOptions): UseCases {
   /** The logged-in user's session on the sign-in client chosen here, and the fetch that acts as them (docs/authentication.md). */
-  const session = createSolidSession(createSessionClient(), {
-    clientName,
-    site: servedSite,
-    clientId,
-    ownStorages,
-  });
+  const session =
+    storageSession ??
+    createSolidSession(createSessionClient(), {
+      clientName,
+      site: servedSite,
+      clientId,
+      ownStorages,
+    });
   /** A guest's pod, kept in this browser (docs/guest-mode.md). */
   const guestStore =
     indexedDB === undefined
@@ -430,6 +440,7 @@ export function createAppUseCases({
     // A release is written as the user, its access control too; whether it is public, asked as no one;
     // the releases a catalog links, read as the instance's data is.
     releasePublisher: createSolidReleasePublisher({
+      modulePublishing,
       fetch: podFetch,
       dataFetch,
       shareFetch,

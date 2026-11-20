@@ -227,3 +227,10 @@ describe("ReleasePublishScreen", () => {
     ).toHaveAttribute("href", "#/check-library");
   });
 });
+
+it("links to the provider's public copy while retaining the stable release ID for actions", () => {
+  const shareUrl = "https://provider.example/shared/file";
+  renderScreen({ draft: released(), isPublic: true, shareUrl });
+  expect(document.querySelector(`a[href="${shareUrl}"]`)).not.toBeNull();
+  expect(document.querySelector(`a[href="${TARGET}"]`)).toBeNull();
+});

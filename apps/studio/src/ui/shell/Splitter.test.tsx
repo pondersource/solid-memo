@@ -5,7 +5,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/preact";
 import { useState } from "preact/hooks";
-import { Splitter } from "./Splitter";
+import { Splitter } from "./DockSplitter";
 
 const size = { min: 100, max: 300, initial: 200 };
 

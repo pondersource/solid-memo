@@ -14,6 +14,7 @@ import type {
 import { type LossQuestion, useAskFirst } from "./askFirst";
 import { ErrorMessage } from "./ErrorMessage";
 import { RegistrationTargetChooser } from "./RegistrationTargetChooser";
+import { isModuleStorage } from "./moduleStorage";
 import { ExternalLink } from "./ExternalLink";
 import { KeptFolderNotice } from "./KeptFolderNotice";
 import { useI18n, type ErrorText } from "./i18n";
@@ -170,7 +171,9 @@ export function InstancePicker({
                 <span class="hint">{t("instanceBar.inBrowser")}</span>
               ) : (
                 <ExternalLink url={instance.url} class="hint">
-                  {t("instanceBar.openInPod")}
+                  {isModuleStorage(instance.url)
+                    ? "Saved in connected storage"
+                    : t("instanceBar.openInPod")}
                 </ExternalLink>
               )}{" "}
               {removable(instance) && (

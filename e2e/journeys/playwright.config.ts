@@ -80,7 +80,14 @@ export default defineConfig({
     // and in any shard, so pod-safety's six do not take one shard's last
     // 100 seconds. A file whose journeys
     // depend on each other says so (studio-course.journey.ts, serial).
-    { name: "chromium", use: { ...devices["Desktop Chrome"] }, fullyParallel: true },
+    {
+      name: "chromium",
+      use: {
+        ...devices["Desktop Chrome"],
+        launchOptions: { executablePath: process.env.CHROMIUM_PATH },
+      },
+      fullyParallel: true,
+    },
     {
       name: "firefox",
       use: { ...devices["Desktop Firefox"] },

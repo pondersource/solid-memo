@@ -281,3 +281,13 @@ describe("InstancePicker", () => {
     expect(props.onDelete).not.toHaveBeenCalled();
   });
 });
+
+it("labels a module-backed instance without a broken Pod link", () => {
+  renderPicker({
+    instances: [
+      { url: "https://flashcards.storage.pondersource.invalid/solid-memo/main/", name: "Study" },
+    ],
+  });
+  expect(screen.getByText("Saved in connected storage")).toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: /Open in your Pod/ })).toBeNull();
+});
