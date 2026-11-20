@@ -218,6 +218,8 @@ async function instrument(context: BrowserContext, found: Diagnostics): Promise<
   await context.route("**/*", (route) => {
     const url = new URL(route.request().url());
     if (["127.0.0.1", "localhost"].includes(url.hostname)) return route.fallback();
+    if (process.env.JOURNEY_APP_URL && url.origin === new URL(process.env.JOURNEY_APP_URL).origin)
+      return route.fallback();
     found.blockedRequests.push(url.href);
     return route.abort("blockedbyclient");
   });

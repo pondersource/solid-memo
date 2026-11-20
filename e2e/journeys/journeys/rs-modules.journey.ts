@@ -7,6 +7,10 @@ import { test } from "../fixtures.ts";
 import type { CssAccount } from "../harness/cssAccount.ts";
 
 async function connect(page: Page, server: string, account: CssAccount) {
+  if (process.env.JOURNEY_APP_URL)
+    await page.context().grantPermissions(["local-network-access"], {
+      origin: new URL(process.env.JOURNEY_APP_URL).origin,
+    });
   await page.goto("./");
   await page.locator(".rs-choose-solid").click();
   await page.locator("[name=rs-provider-address]").fill(server);
@@ -50,7 +54,13 @@ test("@reload widget and flashcards module retain a deck, cards and study on a f
   await app.decks.study("Module vocabulary");
   await app.study.studyAll({ grade: "good" });
   await app.study.endSession();
-  await saved;
+  const privateWrite = await saved;
+  const anonymous = await playwright.request.newContext();
+  try {
+    expect([401, 403, 404]).toContain((await anonymous.get(privateWrite.url())).status());
+  } finally {
+    await anonymous.dispose();
+  }
   const fresh = await newDevice();
   await connect(fresh.page, server, account);
   await fresh.decks.expectDeck("Module vocabulary");
