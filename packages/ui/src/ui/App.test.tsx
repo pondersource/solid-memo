@@ -59,7 +59,11 @@ async function submitWebId(webId: string) {
 
 function renderApp(
   useCases: UseCases,
-  site: { appName?: string; providers?: typeof POD_PROVIDERS } = {},
+  site: {
+    appName?: string;
+    providers?: typeof POD_PROVIDERS;
+    subscribeStorage?: (listener: () => void) => () => void;
+  } = {},
 ) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -70,6 +74,7 @@ function renderApp(
         useCases={useCases}
         source={source}
         appName={site.appName}
+        subscribeStorage={site.subscribeStorage}
         providers={site.providers ?? POD_PROVIDERS}
         identity={SOLID_MEMO}
         workspace={Workspace}
@@ -1692,4 +1697,29 @@ describe("AppShell", () => {
       expect(await screen.findByText(/My study has 2 decks/)).toBeInTheDocument();
     });
   });
+});
+
+it("accepts a widget connection completed after the initial session check", async () => {
+  let changed!: () => void;
+  const restore = vi.fn<UseCases["restoreSession"]>().mockResolvedValue(null);
+  const stop = vi.fn();
+  const view = renderApp(makeUseCases({ restoreSession: restore }), {
+    subscribeStorage: (listener) => {
+      changed = listener;
+      return stop;
+    },
+  });
+  await waitFor(() => expect(restore).toHaveBeenCalledOnce());
+  await act(async () => {
+    changed();
+  });
+  restore.mockResolvedValue(restored);
+  await act(async () => {
+    changed();
+  });
+  expect(restore).toHaveBeenCalledTimes(3);
+  await act(async () => {
+    view.unmount();
+  });
+  await waitFor(() => expect(stop).toHaveBeenCalled());
 });

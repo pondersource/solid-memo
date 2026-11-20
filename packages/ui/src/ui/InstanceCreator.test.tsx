@@ -67,3 +67,14 @@ describe("InstanceCreator", () => {
     expect(screen.getByText("create failed")).toBeInTheDocument();
   });
 });
+
+it("edits a relative folder for module storage", () => {
+  const root = "https://flashcards.storage.pondersource.invalid/";
+  const { props, container } = renderCreator({ storage: { url: root, source: "profile" } });
+  expect(screen.getByLabelText("Folder")).toHaveValue("solid-memo/main/");
+  fireEvent.input(screen.getByLabelText("Folder"), { target: { value: "solid-memo/languages/" } });
+  fireEvent.submit(container.querySelector("form")!);
+  expect(props.onCreate).toHaveBeenCalledWith(
+    expect.objectContaining({ containerUrl: root + "solid-memo/languages/" }),
+  );
+});

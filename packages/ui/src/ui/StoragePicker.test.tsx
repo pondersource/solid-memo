@@ -87,3 +87,10 @@ describe("StoragePicker", () => {
     expect(screen.getByText("(angiven manuellt)")).toBeInTheDocument();
   });
 });
+
+it("names module storage without exposing its internal identifier", () => {
+  renderPicker({
+    storages: [{ url: "https://flashcards.storage.pondersource.invalid/", source: "profile" }],
+  });
+  expect(screen.getByRole("button", { name: "Connected storage" })).toBeInTheDocument();
+});

@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/preact";
+import { render, screen, waitFor } from "@testing-library/preact";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { UseCases } from "@solid-memo/application/useCases";
 import { DEFAULT_PREFERENCES } from "@solid-memo/domain/preferences";
@@ -97,3 +97,19 @@ describe("ReleasePublishContainer", () => {
     ).toBeInTheDocument();
   });
 });
+
+it.each([undefined, "https://provider.example/shared/file"])(
+  "resolves the public release link (%s)",
+  async (shareUrl) => {
+    const useCases = makeUseCasesFake({
+      isReleasePublic: vi.fn(async () => true),
+      listPublishedReleases: vi.fn(async () => [{ url: TARGET, public: true, shareUrl }]),
+    });
+    renderContainer(useCases, {
+      ...courseDraft(),
+      root: { ...courseDraft().root, releasedAs: TARGET },
+    });
+    await screen.findByText("Anyone with its address can read it.");
+    await waitFor(() => expect(useCases.listPublishedReleases).toHaveBeenCalled());
+  },
+);

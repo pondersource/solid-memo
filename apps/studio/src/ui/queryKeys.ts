@@ -63,5 +63,10 @@ export const queryKeys = {
   /** The releases an instance published. */
   publishedReleases: (instanceUrl: string) => ["publishedReleases", instanceUrl],
   /** Whether a release is public. */
+  releaseShareLink: (releaseUrl: string | undefined, isPublic: boolean | undefined) => [
+    "releaseShareLink",
+    releaseUrl,
+    isPublic,
+  ],
   releasePublic: (releaseUrl: string) => ["releasePublic", releaseUrl],
 };

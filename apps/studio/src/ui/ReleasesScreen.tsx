@@ -162,7 +162,9 @@ export function ReleasesScreen({
                 label: t("studio.releases.column.release"),
                 cell: (release) => (
                   <>
-                    <ExternalLink url={release.url}>{nameOf(release.url)}</ExternalLink>
+                    <ExternalLink url={release.shareUrl ?? release.url}>
+                      {nameOf(release.url)}
+                    </ExternalLink>
                     {release.public === null && (
                       <>
                         {" "}
@@ -172,7 +174,7 @@ export function ReleasesScreen({
                       </>
                     )}
                     <br />
-                    <code>{release.url}</code>
+                    <code>{release.shareUrl ?? release.url}</code>
                   </>
                 ),
               }}
@@ -229,7 +231,7 @@ export function ReleasesScreen({
                   cell: (release) => (
                     <>
                       <CopyLink
-                        url={release.url}
+                        url={release.shareUrl ?? release.url}
                         label={t("studio.releases.copyLink", { url: release.url })}
                       />{" "}
                       <button

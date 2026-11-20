@@ -59,13 +59,20 @@ import { RDF, SM } from "./vocab";
  * and how deep they nest, and an access control's subjects, to
  * MAX_ACCESS_CONTROL_SUBJECTS (accessControlFetch).
  */
+export interface ModulePublishing {
+  publish(url: string): Promise<string>;
+  getPublicURL(url: string): Promise<string | undefined>;
+}
+
 export function createSolidReleasePublisher({
+  modulePublishing,
   fetch,
   dataFetch,
   shareFetch,
   publicFetch,
   grantPublicRead,
 }: {
+  modulePublishing?: ModulePublishing;
   fetch: typeof globalThis.fetch;
   dataFetch: typeof globalThis.fetch;
   shareFetch: typeof globalThis.fetch;
@@ -87,6 +94,7 @@ export function createSolidReleasePublisher({
    */
   async function share(url: string): Promise<boolean> {
     try {
+      if (modulePublishing) return Boolean(await modulePublishing.publish(url));
       return await grantPublicRead(url, { fetch: accessControlFetch(shareFetch, url) });
     } catch {
       return false;
@@ -128,6 +136,7 @@ export function createSolidReleasePublisher({
   }
 
   return {
+    ...(modulePublishing ? { publicUrl: modulePublishing.getPublicURL } : {}),
     async publish(instanceUrl, turtle, targetUrl) {
       // Before the release is written: one the catalog has no room to link would be public, and listed nowhere.
       await refuseFullCatalog(instanceUrl, SM.publishedRelease, targetUrl, dataFetch);
@@ -159,7 +168,8 @@ export function createSolidReleasePublisher({
 
     async isPublic(url) {
       try {
-        return (await publicFetch(url, { method: "HEAD" })).ok;
+        const publicUrl = modulePublishing ? await modulePublishing.getPublicURL(url) : url;
+        return publicUrl !== undefined && (await publicFetch(publicUrl, { method: "HEAD" })).ok;
       } catch {
         return false;
       }

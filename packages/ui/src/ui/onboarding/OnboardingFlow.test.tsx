@@ -154,3 +154,11 @@ describe("OnboardingFlow", () => {
     );
   });
 });
+
+it("opens the shared widget for all configured backends", () => {
+  const connectStorage = vi.fn();
+  renderFlow({ connectStorage });
+  fireEvent.click(screen.getByRole("button", { name: "Connect storage" }));
+  expect(connectStorage).toHaveBeenCalledOnce();
+  expect(screen.queryByLabelText("WebID")).toBeNull();
+});

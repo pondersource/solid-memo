@@ -6,6 +6,7 @@ import type { ComponentChildren } from "preact";
 import { isHttpUrl, isLinkableUrl } from "@solid-memo/domain/webId";
 import { namesItsHost } from "@solid-memo/markdown/links";
 import { visibleControls } from "@solid-memo/markdown/parse";
+import { isModuleStorage } from "./moduleStorage";
 import { ExternalIcon } from "./icons";
 import { useI18n } from "./i18n";
 
@@ -40,6 +41,13 @@ export function ExternalLink({
   children?: ComponentChildren;
 }) {
   const { t } = useI18n();
+  if (isModuleStorage(url)) {
+    return (
+      <span class={className} dir={dir}>
+        {children ?? "Connected storage"}
+      </span>
+    );
+  }
   if (!isLinkableUrl(url)) {
     return (
       <span class={className} dir={dir}>

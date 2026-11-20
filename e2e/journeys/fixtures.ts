@@ -39,7 +39,7 @@ import { App } from "./pages/App.ts";
  *
  * And, unasked: Math.random seeded (JOURNEY_SEED, else from the title and
  * the repeat),
- * requests to any host but 127.0.0.1 refused, flags stubbed, dialogs
+ * requests to any host but localhost or 127.0.0.1 refused, flags stubbed, dialogs
  * answered only as a step expects, and diagnostics.json (console, page
  * errors, failed requests, each page's crash or close and the times it
  * went quiet, harness/heartbeat.ts) attached, plus, when the journey
@@ -163,7 +163,10 @@ export const test = base.extend<Fixtures>({
       }
       expect.soft(found.pageErrors, "errors thrown in the page (diagnostics.json)").toEqual([]);
       expect
-        .soft(found.blockedRequests, "requests to hosts other than 127.0.0.1 (diagnostics.json)")
+        .soft(
+          found.blockedRequests,
+          "requests to hosts other than localhost or 127.0.0.1 (diagnostics.json)",
+        )
         .toEqual([]);
       expect.soft(found.unexpectedDialogs, "dialogs no step expected").toEqual([]);
     },
@@ -203,7 +206,7 @@ export { expect };
 
 /**
  * What every context gets: Math.random seeded, requests to any host
- * but 127.0.0.1 refused, and each page's heartbeat.
+ * but localhost or 127.0.0.1 refused, and each page's heartbeat.
  */
 async function instrument(context: BrowserContext, found: Diagnostics): Promise<void> {
   await context.addInitScript(seedRandom, found.seed);
@@ -214,7 +217,9 @@ async function instrument(context: BrowserContext, found: Diagnostics): Promise<
   // Routing every request turns Chromium's HTTP cache off: the app loads everything afresh, as on a first visit.
   await context.route("**/*", (route) => {
     const url = new URL(route.request().url());
-    if (url.hostname === "127.0.0.1") return route.fallback();
+    if (["127.0.0.1", "localhost"].includes(url.hostname)) return route.fallback();
+    if (process.env.JOURNEY_APP_URL && url.origin === new URL(process.env.JOURNEY_APP_URL).origin)
+      return route.fallback();
     found.blockedRequests.push(url.href);
     return route.abort("blockedbyclient");
   });

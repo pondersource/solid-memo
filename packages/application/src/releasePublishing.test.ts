@@ -298,3 +298,19 @@ describe("downloadRelease", () => {
     });
   });
 });
+
+it("keeps stable release IDs while returning the module's public provider links", async () => {
+  const { useCases, publisher } = setUp();
+  const shareUrl = "https://provider.example/shared/file";
+  Object.assign(publisher, { publicUrl: async () => shareUrl });
+  expect(await useCases.publishRelease(DRAFT, TARGET, markdownCheck)).toEqual({
+    url: TARGET,
+    public: true,
+    shareUrl,
+  });
+  expect((await useCases.listPublishedReleases(INSTANCE))[0]).toEqual({
+    url: TARGET,
+    public: true,
+    shareUrl,
+  });
+});

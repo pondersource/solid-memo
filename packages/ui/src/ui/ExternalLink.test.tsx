@@ -90,3 +90,17 @@ describe("ExternalLink", () => {
     expect(screen.getByText(url)).toBeInTheDocument();
   });
 });
+
+it("shows module identifiers as storage labels, never external links", () => {
+  const { rerender } = render(
+    <ExternalLink url="https://flashcards.storage.pondersource.invalid/" />,
+  );
+  expect(screen.getByText("Connected storage")).toBeInTheDocument();
+  expect(screen.queryByRole("link")).toBeNull();
+  rerender(
+    <ExternalLink url="https://flashcards.storage.pondersource.invalid/profile/card#me">
+      My storage
+    </ExternalLink>,
+  );
+  expect(screen.getByText("My storage")).toBeInTheDocument();
+});

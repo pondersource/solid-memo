@@ -37,6 +37,7 @@ describe("queryKeys", () => {
       queryKeys.releaseDiff(DRAFT, 3),
       queryKeys.publishedReleases(INSTANCE),
       queryKeys.releasePublic(RELEASE),
+      queryKeys.releaseShareLink(RELEASE, true),
     ]).toEqual([
       ["decks", INSTANCE, "libraryUpdates"],
       ["validation", INSTANCE, "deck", DECK, CARDS],
@@ -52,6 +53,7 @@ describe("queryKeys", () => {
       ["releaseDiff", DRAFT, 3],
       ["publishedReleases", INSTANCE],
       ["releasePublic", RELEASE],
+      ["releaseShareLink", RELEASE, true],
     ]);
   });
 

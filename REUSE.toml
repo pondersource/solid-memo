@@ -217,3 +217,15 @@ path = "packages/vocab/vendor/skohub/**"
 precedence = "override"
 SPDX-FileCopyrightText = "SkoHub contributors (https://github.com/skohub-io/skohub-shapes)"
 SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ["apps/web/public/storage/**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = ["2013 remoteStorage contributors", "2026 PonderSource contributors", "2026 Anton Wiklund and Solid Memo contributors", "Nick Jennings", "Ruben Verborgh and N3.js contributors", "Facebook, Inc."]
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = ["apps/web/public/storage/rs.js", "apps/web/public/storage/rs.js.LICENSE.txt"]
+precedence = "override"
+SPDX-FileCopyrightText = ["2013 remoteStorage contributors", "Feross Aboukhadijeh and contributors", "Inrupt Inc. and contributors"]
+SPDX-License-Identifier = "MIT AND BSD-3-Clause"

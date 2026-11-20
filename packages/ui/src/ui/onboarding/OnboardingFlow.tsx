@@ -17,6 +17,7 @@ import { WebIdForm } from "./WebIdForm";
  * note on why the app was made either.
  */
 export function OnboardingFlow({
+  connectStorage,
   providers,
   busy,
   returning,
@@ -25,6 +26,7 @@ export function OnboardingFlow({
   onTryAsGuest,
   note,
 }: {
+  connectStorage?: () => void;
   providers: readonly PodProvider[];
   busy: boolean;
   /** Logged out here, or a guest logging in: logging in comes first. */
@@ -39,7 +41,13 @@ export function OnboardingFlow({
   const { t } = useI18n();
   const signUpProviders = providers.filter((provider) => provider.signUpUrl !== undefined);
 
-  const logIn = (
+  const logIn = connectStorage ? (
+    <section class="onboarding">
+      <h2>Connect your storage</h2>
+      <p>Choose remoteStorage, Dropbox, Google Drive, or Solid.</p>
+      <button onClick={connectStorage}>Connect storage</button>
+    </section>
+  ) : (
     <section class="onboarding">
       <h2>{t("onboardingFlow.logInHeading")}</h2>
       <p class="hint">{t("onboardingFlow.providerHint")}</p>

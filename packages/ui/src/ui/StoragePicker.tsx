@@ -4,6 +4,7 @@
 
 import { useState } from "preact/hooks";
 import type { Storage } from "@solid-memo/domain/storage";
+import { isModuleStorage } from "./moduleStorage";
 import { ErrorMessage } from "./ErrorMessage";
 import { useI18n, type I18n, type ErrorText } from "./i18n";
 
@@ -48,9 +49,9 @@ export function StoragePicker({
       ) : (
         <ul class="storage-list">
           {storages.map((storage) => (
-            <li key={storage.url}>
+            <li key={isModuleStorage(storage.url) ? "Connected storage" : storage.url}>
               <button onClick={() => onSelect(storage)} disabled={busy}>
-                {storage.url}
+                {isModuleStorage(storage.url) ? "Connected storage" : storage.url}
               </button>{" "}
               <span class="hint">({sourceLabel(storage.source, t)})</span>
             </li>

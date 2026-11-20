@@ -277,7 +277,7 @@ or Close closes it, and the focus goes back where it was. A saved view
 renamed keeps the focus; one removed gives it to **+ Save view**.
 
 A splitter
-([`shell/Splitter.tsx`](../apps/studio/src/ui/shell/Splitter.tsx)) is a
+([`shell/DockSplitter.tsx`](../apps/studio/src/ui/shell/DockSplitter.tsx)) is a
 separator, as screen readers know one, that takes the focus. Its value
 is the pane's size in pixels, between bounds that scale with the text
 size over the browser's default 16px ([theme.md](theme.md#text-size)).

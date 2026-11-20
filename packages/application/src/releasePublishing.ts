@@ -33,6 +33,7 @@ import { mapAtOnce } from "./atOnce";
  * another origin than the instance (listPublishedReleases).
  */
 export interface PublishedRelease {
+  shareUrl?: string;
   url: string;
   public: boolean | null;
 }
@@ -151,7 +152,13 @@ export function createReleasePublishingUseCases({
         { ...draft, root: { ...draft.root, releasedAs: targetUrl } },
         version,
       );
-      return { url: targetUrl, public: shared };
+      return {
+        url: targetUrl,
+        public: shared,
+        ...(releasePublisher.publicUrl
+          ? { shareUrl: await releasePublisher.publicUrl(targetUrl) }
+          : {}),
+      };
     },
 
     async makeReleasePublic(instanceUrl, url, webId) {
@@ -179,6 +186,7 @@ export function createReleasePublishingUseCases({
       const origin = new URL(instanceUrl).origin;
       return mapAtOnce(urls, async (url) => ({
         url,
+        ...(releasePublisher.publicUrl ? { shareUrl: await releasePublisher.publicUrl(url) } : {}),
         public: new URL(url).origin === origin ? await releasePublisher.isPublic(url) : null,
       }));
     },

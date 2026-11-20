@@ -4,6 +4,7 @@
 
 import { isGuestUrl } from "@solid-memo/domain/guest";
 import type { Instance } from "@solid-memo/domain/instance";
+import { isModuleStorage } from "./moduleStorage";
 import { ExternalLink } from "./ExternalLink";
 import { useI18n } from "./i18n";
 import { routeToHash, statisticsHref, studioHref } from "./router";
@@ -24,7 +25,9 @@ export function InstanceBar({ instance }: { instance: Instance }) {
           <span class="hint">{t("instanceBar.inBrowser")}</span>
         ) : (
           <ExternalLink url={instance.url} class="hint">
-            {t("instanceBar.openInPod")}
+            {isModuleStorage(instance.url)
+              ? "Saved in connected storage"
+              : t("instanceBar.openInPod")}
           </ExternalLink>
         )}
       </div>

@@ -19,7 +19,7 @@ import { DENSITIES, rememberPrefs, studioPrefs, type StudioPrefs, type WorkItem 
 import { keysOf, nextRegion, sectionRoute, type Section, type ShortcutId } from "./shortcuts";
 import { RevealAside } from "./revealAside";
 import { ASIDE_WIDTH, clampSize, DETAIL_WIDTH, scaledPane } from "./splitter";
-import { Splitter } from "./Splitter";
+import { Splitter } from "./DockSplitter";
 import { ScreenCommands, useCommandRegistry } from "./useScreenCommands";
 import { useMedia } from "./useMedia";
 import { ScreenKeys, useShortcuts } from "./useShortcuts";

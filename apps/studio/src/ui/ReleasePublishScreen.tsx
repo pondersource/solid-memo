@@ -66,6 +66,7 @@ export function ReleasePublishScreen({
   links,
   publish,
   isPublic,
+  shareUrl,
   makePublic,
   startNext,
   download,
@@ -81,6 +82,7 @@ export function ReleasePublishScreen({
   publish: Action<string>;
   /** Whether someone with no login can read the release the draft was published as; undefined while that is asked. */
   isPublic: boolean | undefined;
+  shareUrl?: string | null;
   makePublic: Action<string>;
   startNext: Action<string>;
   download: Action<void>;
@@ -105,6 +107,7 @@ export function ReleasePublishScreen({
             hold={hold}
             healthHref={links.healthHref}
             isPublic={isPublic}
+            shareUrl={shareUrl}
             makePublic={makePublic}
             startNext={startNext}
           />
@@ -253,6 +256,7 @@ function Released({
   hold,
   healthHref,
   isPublic,
+  shareUrl,
   makePublic,
   startNext,
 }: {
@@ -260,6 +264,7 @@ function Released({
   hold: ReadOnlyReason | null;
   healthHref: string;
   isPublic: boolean | undefined;
+  shareUrl?: string | null;
   makePublic: Action<string>;
   startNext: Action<string>;
 }) {
@@ -267,9 +272,9 @@ function Released({
   const { ask, dialog } = useConfirm();
   return (
     <>
-      <p>{tx("studio.publish.releasedAt", { url: <ExternalLink url={url} /> })}</p>
+      <p>{tx("studio.publish.releasedAt", { url: <ExternalLink url={shareUrl ?? url} /> })}</p>
       <p>
-        <CopyLink url={url} label={t("studio.releases.copyLink", { url })} />
+        <CopyLink url={shareUrl ?? url} label={t("studio.releases.copyLink", { url })} />
       </p>
       {isPublic === undefined ? (
         <p class="hint">{t("studio.publish.askingPublic")}</p>

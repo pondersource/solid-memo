@@ -2,6 +2,10 @@
 //
 // SPDX-License-Identifier: MIT
 
+import {
+  createRemoteStorageSession,
+  type StorageConnection,
+} from "@solid-memo/composition/remoteStorageSession";
 import { render } from "preact";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createAppUseCases } from "@solid-memo/composition/appUseCases";
@@ -23,7 +27,15 @@ const servedSite = new URL(".", document.baseURI).href;
 // The old journeys' report's trace viewer, gone but still registered (docs/deployment.md#the-journeys-report).
 void unregisterJourneysWorkers(navigator.serviceWorker, servedSite);
 
+declare global {
+  interface Window {
+    ponderStorage: StorageConnection;
+  }
+}
+
 const useCases = createAppUseCases({
+  storageSession: createRemoteStorageSession(window.ponderStorage),
+  modulePublishing: window.ponderStorage.api,
   // The name the identity provider shows when the user logs in.
   clientName: config.appName,
   // The Client ID Document the build wrote on the domain in CNAME, if any (docs/authentication.md).
@@ -66,6 +78,12 @@ render(
   >
     <QueryClientProvider client={queryClient}>
       <App
+        connectStorage={() => window.ponderStorage.open()}
+        subscribeStorage={(listener) =>
+          window.ponderStorage.onUser((user) => {
+            if (user) listener();
+          })
+        }
         useCases={useCases}
         source={source}
         appName={config.appName}

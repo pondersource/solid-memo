@@ -40,6 +40,10 @@ export class Chrome extends Screen {
 
   /** Follows a section of the Studio's sidebar, by its key ("groups"). */
   async studioSection(section: string): Promise<void> {
+    if (!(await this.studioSidebar.isVisible()))
+      await this.page
+        .getByRole("button", { name: this.t("studio.shell.sidebar"), exact: true })
+        .click();
     await this.studioSidebar
       .getByRole("link", { name: this.t(`studio.shell.section.${section}`), exact: true })
       .click();

@@ -256,7 +256,9 @@ describe("the page's Content Security Policy", () => {
     expect(inline).toHaveLength(1);
     expect(allowed.filter((source) => source.startsWith("'sha256-"))).toEqual(inline);
     for (const script of scripts.filter((script) => script.hasAttribute("src")))
-      expect(script.getAttribute("src")).toMatch(/^\.\/assets\//);
+      expect(script.getAttribute("src")).toMatch(
+        /^\.\/(?:assets\/|storage\/(?:rs|widget|modules|start)\.js$)/,
+      );
   });
 
   it("allows no plugins, no base element and no form posts", () => {

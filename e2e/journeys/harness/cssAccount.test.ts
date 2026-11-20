@@ -101,7 +101,7 @@ describe("createAccount", () => {
       `POST ${SERVER}.account/account/ {}`,
       `GET ${SERVER}.account/ CSS-Account-Token tok`,
       `POST ${CONTROLS.controls.password.create} {"email":"j-12345678@journeys.example","password":"pw-12345678"}`,
-      `POST ${CONTROLS.controls.account.pod} {"name":"j-12345678"}`,
+      `POST ${CONTROLS.controls.account.pod} {"name":"j-12345678","settings":{"linkStorage":true}}`,
       `POST ${CONTROLS.controls.account.clientCredentials} {"name":"j-12345678-dump","webId":"${SERVER}j-12345678/profile/card#me"}`,
     ]);
   });

@@ -5,6 +5,7 @@
 import { useState } from "preact/hooks";
 import type { RegistrationOptions, RegistrationTarget } from "@solid-memo/domain/instance";
 import type { Storage } from "@solid-memo/domain/storage";
+import { isModuleStorage } from "./moduleStorage";
 import { ErrorMessage } from "./ErrorMessage";
 import { useI18n, type ErrorText } from "./i18n";
 import { RegistrationTargetChooser } from "./RegistrationTargetChooser";
@@ -30,6 +31,7 @@ export function InstanceCreator({
   backHref: string;
 }) {
   const { t } = useI18n();
+  const moduleStorage = isModuleStorage(storage.url);
   const [name, setName] = useState("");
   const [containerUrl, setContainerUrl] = useState(`${storage.url}solid-memo/main/`);
   const [target, setTarget] = useState<RegistrationTarget>("private");
@@ -60,18 +62,24 @@ export function InstanceCreator({
           required
           disabled={busy}
         />
-        <label for="instance-container">{t("instanceCreator.location")}</label>
+        <label for="instance-container">
+          {moduleStorage ? "Folder" : t("instanceCreator.location")}
+        </label>
         <input
           id="instance-container"
-          type="url"
+          {...(moduleStorage ? { type: "text" as const } : { type: "url" as const })}
           aria-describedby="instance-container-hint"
-          value={containerUrl}
-          onInput={(e) => setContainerUrl(e.currentTarget.value)}
+          value={moduleStorage ? containerUrl.slice(storage.url.length) : containerUrl}
+          onInput={(e) =>
+            setContainerUrl((moduleStorage ? storage.url : "") + e.currentTarget.value)
+          }
           required
           disabled={busy}
         />
         <span id="instance-container-hint" class="hint">
-          {t("instanceCreator.locationHint")}
+          {moduleStorage
+            ? "A folder in your connected storage."
+            : t("instanceCreator.locationHint")}
         </span>
         <RegistrationTargetChooser options={options} value={target} onChange={setTarget} />
         <button type="submit" disabled={busy}>

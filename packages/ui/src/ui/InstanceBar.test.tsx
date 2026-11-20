@@ -65,3 +65,12 @@ describe("InstanceBar", () => {
     expect(bar.queryByRole("button")).toBeNull();
   });
 });
+
+it("labels module-backed instances without a broken Pod link", () => {
+  renderBar({
+    url: "https://flashcards.storage.pondersource.invalid/solid-memo/main/",
+    name: "Study",
+  });
+  expect(screen.getByText("Saved in connected storage")).toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: /Open in your Pod/ })).toBeNull();
+});
