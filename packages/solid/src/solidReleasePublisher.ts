@@ -60,6 +60,8 @@ import { RDF, SM } from "./vocab";
  * MAX_ACCESS_CONTROL_SUBJECTS (accessControlFetch).
  */
 export interface ModulePublishing {
+  /** False for original native documents shared by the Pod's own access control. */
+  handles?(url: string): boolean;
   publish(url: string): Promise<string>;
   getPublicURL(url: string): Promise<string | undefined>;
 }
@@ -79,6 +81,11 @@ export function createSolidReleasePublisher({
   publicFetch: typeof globalThis.fetch;
   grantPublicRead: GrantPublicRead;
 }): ReleasePublisher {
+  const throughModule = (url: string) =>
+    modulePublishing !== undefined && modulePublishing.handles?.(url) !== false;
+  const publicUrl = (url: string) =>
+    throughModule(url) ? modulePublishing!.getPublicURL(url) : Promise.resolve(url);
+
   /** The release at `url`, as `fetch` reads it, under RELEASE_LIMITS: its triples; throws when it cannot be read. */
   async function readRelease(url: string): Promise<Quad[]> {
     const response = await limitedFetch(fetch, RELEASE_LIMITS)(url, {
@@ -94,7 +101,7 @@ export function createSolidReleasePublisher({
    */
   async function share(url: string): Promise<boolean> {
     try {
-      if (modulePublishing) return Boolean(await modulePublishing.publish(url));
+      if (throughModule(url)) return Boolean(await modulePublishing!.publish(url));
       return await grantPublicRead(url, { fetch: accessControlFetch(shareFetch, url) });
     } catch {
       return false;
@@ -136,7 +143,7 @@ export function createSolidReleasePublisher({
   }
 
   return {
-    ...(modulePublishing ? { publicUrl: modulePublishing.getPublicURL } : {}),
+    ...(modulePublishing ? { publicUrl } : {}),
     async publish(instanceUrl, turtle, targetUrl) {
       // Before the release is written: one the catalog has no room to link would be public, and listed nowhere.
       await refuseFullCatalog(instanceUrl, SM.publishedRelease, targetUrl, dataFetch);
@@ -168,8 +175,10 @@ export function createSolidReleasePublisher({
 
     async isPublic(url) {
       try {
-        const publicUrl = modulePublishing ? await modulePublishing.getPublicURL(url) : url;
-        return publicUrl !== undefined && (await publicFetch(publicUrl, { method: "HEAD" })).ok;
+        const publishedUrl = await publicUrl(url);
+        return (
+          publishedUrl !== undefined && (await publicFetch(publishedUrl, { method: "HEAD" })).ok
+        );
       } catch {
         return false;
       }

@@ -990,6 +990,49 @@ describe("Workspace", () => {
     expect(screen.queryByText("not an instance")).not.toBeInTheDocument();
   });
 
+  it("offers a retained module instance to delete without adding its identifier to storage choices", async () => {
+    const retained: Instance = {
+      url: "https://flashcards.storage.pondersource.invalid/kept/",
+      name: "Earlier study",
+    };
+    const useCases = makeUseCases({
+      listInstances: vi.fn(async () => [instanceA, retained]),
+      isInOwnPod: vi.fn(async () => true),
+    });
+    renderWorkspace(useCases);
+    expect(
+      await screen.findByRole("button", { name: "Delete instance Earlier study" }),
+    ).toBeVisible();
+    expect(useCases.isInOwnPod).toHaveBeenCalledWith(retained.url);
+    expect(screen.queryByText("Outside your Pod, so Solid Memo cannot delete it.")).toBeNull();
+  });
+
+  it("waits for retained module ownership before offering deletion, and reports a confirmed denial", async () => {
+    const retained: Instance = {
+      url: "https://flashcards.storage.pondersource.invalid/kept/",
+      name: "Earlier study",
+    };
+    let decide: (own: boolean) => void = () => undefined;
+    const useCases = makeUseCases({
+      listInstances: vi.fn(async () => [instanceA, retained]),
+      isInOwnPod: vi.fn(
+        () =>
+          new Promise<boolean>((resolve) => {
+            decide = resolve;
+          }),
+      ),
+    });
+    renderWorkspace(useCases);
+    await waitFor(() => expect(useCases.isInOwnPod).toHaveBeenCalled());
+    expect(screen.queryByRole("button", { name: "Delete instance Earlier study" })).toBeNull();
+    expect(screen.queryByText("Outside your Pod, so Solid Memo cannot delete it.")).toBeNull();
+    decide(false);
+    expect(
+      await screen.findByText("Outside your Pod, so Solid Memo cannot delete it."),
+    ).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Delete instance Earlier study" })).toBeNull();
+  });
+
   it("says why an instance outside the user's Pod has no delete, once their storages are known", async () => {
     let storagesRead: (storages: Storage[]) => void = () => undefined;
     const useCases = makeUseCases({

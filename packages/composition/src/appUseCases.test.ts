@@ -327,6 +327,63 @@ describe("createSiteFetch", () => {
 describe("createAppUseCases", () => {
   const options = { clientName: "Solid Memo", servedSite: SERVED, ruleset: "test" };
 
+  it("edits native and earlier module instances through their original identities and fences", async () => {
+    const native = "https://alice.example/";
+    const adapter = "https://flashcards.storage.pondersource.invalid/";
+    const nativePod = podAt(native),
+      adapterPod = podAt(adapter);
+    podsNetwork({ [native]: nativePod, [adapter]: adapterPod });
+    login.webId = `${native}profile/card#me`;
+    const adapterWebId = `${adapter}profile/card#me`;
+    for (const [pod, root, webId] of [
+      [nativePod, native, login.webId],
+      [adapterPod, adapter, adapterWebId],
+    ] as const)
+      await put(
+        pod,
+        `${root}profile/card`,
+        `<${webId}> <http://www.w3.org/ns/pim/space#storage> <${root}>.`,
+      );
+    const useCases = createAppUseCases({
+      ...options,
+      indexedDB: undefined,
+      moduleStorage: () => ({
+        storageSources: () => [
+          { webId: login.webId!, root: native },
+          { webId: adapterWebId, root: adapter, optional: true },
+        ],
+        identityFor: (url) => (url.startsWith(adapter) ? adapterWebId : undefined),
+      }),
+    });
+    const session = { webId: login.webId };
+    const original = await useCases.createInstance(session, {
+      containerUrl: native + "memo/",
+      name: "Native",
+      registrationTarget: "private",
+    });
+    const existing = await useCases.createInstance(session, {
+      containerUrl: adapter + "kept/",
+      name: "Earlier",
+      registrationTarget: "private",
+    });
+    const deck = await useCases.createDeck(existing.url, { en: "Kept vocabulary" });
+    await useCases.addCard(deck, { front: { en: "Moon" }, back: { sv: "Måne" } });
+    expect((await useCases.listCards(deck))[0]!.front).toEqual({ en: "Moon" });
+    expect(await useCases.isInOwnPod(existing.url)).toBe(true);
+    expect(await useCases.listInstances(session)).toEqual([original, existing]);
+    await useCases.renameInstance(session, existing, "Earlier renamed");
+    expect((await useCases.listInstances(session)).map((instance) => instance.name)).toEqual([
+      "Native",
+      "Earlier renamed",
+    ]);
+    expect(await (await nativePod(native + "settings/privateTypeIndex.ttl")).text()).not.toContain(
+      existing.url,
+    );
+    expect(await (await adapterPod(adapter + "settings/privateTypeIndex.ttl")).text()).toContain(
+      "Earlier renamed",
+    );
+  });
+
   it("keeps a guest's study in memory, every write checked against the shapes the site publishes", async () => {
     const useCases = createAppUseCases({ ...options, indexedDB: undefined });
     expect(await useCases.startGuest("My study")).toEqual(GUEST_SESSION);

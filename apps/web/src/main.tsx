@@ -4,6 +4,7 @@
 
 import {
   createRemoteStorageSession,
+  createRemoteStoragePublishing,
   type StorageConnection,
 } from "@solid-memo/composition/remoteStorageSession";
 import { render } from "preact";
@@ -36,7 +37,11 @@ declare global {
 const storage = __NATIVE_INTEROP__ ? undefined : window.ponderStorage;
 const useCases = createAppUseCases({
   ...(storage
-    ? { storageSession: createRemoteStorageSession(storage), modulePublishing: storage.api }
+    ? {
+        storageSession: createRemoteStorageSession(storage),
+        modulePublishing: createRemoteStoragePublishing(storage),
+        moduleStorage: () => storage.api,
+      }
     : {}),
   // The name the identity provider shows when the user logs in.
   clientName: config.appName,

@@ -45,3 +45,28 @@ it("restores module identity, uses the widget and forwards only module storage",
   expect(await gateway.restore()).toBeNull();
   expect(await gateway.hasStoredSession()).toBe(false);
 });
+
+it("chooses sharing from the current source and retains native release URLs", async () => {
+  const { createRemoteStoragePublishing } = await import("./remoteStorageSession");
+  const copy = {
+    root: "https://flashcards.storage.pondersource.invalid/",
+    publish: vi.fn(async () => "https://public.example/copy"),
+    getPublicURL: vi.fn(async () => "https://public.example/copy"),
+  };
+  const connection = { api: undefined as StorageConnection["api"] };
+  const publishing = createRemoteStoragePublishing(connection);
+  expect(publishing.handles!("https://pod.example/release.ttl")).toBe(true);
+  connection.api = copy;
+  expect(publishing.handles!(copy.root + "release.ttl")).toBe(true);
+  expect(await publishing.publish(copy.root + "release.ttl")).toBe("https://public.example/copy");
+  expect(await publishing.getPublicURL(copy.root + "release.ttl")).toBe(
+    "https://public.example/copy",
+  );
+  connection.api = { root: "https://pod.example/", nativeSolidDocuments: true, adapter: copy };
+  expect(publishing.handles!("https://pod.example/release.ttl")).toBe(false);
+  expect(publishing.handles!(copy.root + "release.ttl")).toBe(true);
+  expect(await publishing.publish(copy.root + "release.ttl")).toBe("https://public.example/copy");
+  expect(await publishing.getPublicURL(copy.root + "release.ttl")).toBe(
+    "https://public.example/copy",
+  );
+});

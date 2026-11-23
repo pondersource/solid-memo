@@ -14,6 +14,25 @@ data through the [type indexes](https://solid.github.io/type-indexes/),
 an editor's draft
 ([standards.md](standards.md#drafts-and-de-facto-specifications)).
 
+## Storage sources in this fork
+
+The Ponder Source fork connects through the remoteStorage flashcards
+module. A Solid connection reads the user's original WebID and type
+indexes, and edits the original RDF document URLs in place. Connecting
+doesn't import, move or delete those documents. New Solid instances use
+the same native layout described below.
+
+Records made by the earlier remoteStorage adapter remain available too.
+The instance list reads both sources, and edits keep their original
+addresses and registration identities. An absent adapter profile means
+there are no earlier records; a refused source or an invalid adapter
+record remains an error. The app doesn't replace it with an empty
+collection.
+
+Other storage providers keep using the module's adapter. Native Solid
+releases use the Pod's own access control. An adapter release keeps its
+separate public copy; publishing it doesn't expose the private records.
+
 ## Vocabulary and shapes
 
 Solid Memo mints its own terms under

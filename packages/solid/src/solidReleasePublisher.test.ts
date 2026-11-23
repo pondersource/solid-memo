@@ -812,3 +812,18 @@ it("publishes through the rs module and checks its provider link without changin
   expect(modulePublishing.publish).toHaveBeenCalledWith(RELEASE);
   expect(sent.filter((value) => value.startsWith("PATCH") && value.includes(".acl"))).toEqual([]);
 });
+
+it("shares original native module documents through the Pod's own access control", async () => {
+  const modulePublishing = {
+    handles: vi.fn(() => false),
+    publish: vi.fn(async () => "https://unused.example/copy"),
+    getPublicURL: vi.fn(async () => "https://unused.example/copy"),
+  };
+  const { publisher, sent } = await publisherPod({ modulePublishing });
+  expect((await publisher.publish(INSTANCE, TURTLE, RELEASE)).public).toBe(true);
+  expect(await publisher.publicUrl!(RELEASE)).toBe(RELEASE);
+  expect(await publisher.isPublic(RELEASE)).toBe(true);
+  expect(modulePublishing.publish).not.toHaveBeenCalled();
+  expect(modulePublishing.getPublicURL).not.toHaveBeenCalled();
+  expect(sent.some((value) => value.startsWith("PATCH") && value.includes(".acl"))).toBe(true);
+});

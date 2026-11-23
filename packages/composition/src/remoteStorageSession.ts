@@ -2,14 +2,28 @@
 //
 // SPDX-License-Identifier: MIT
 
+import type { ModulePublishing } from "@solid-memo/solid/solidReleasePublisher";
+import type { ModuleStorageSources } from "./moduleInstanceRepository";
 import type { SolidSession } from "@solid-memo/solid/solidSession";
+
+/** The adapter's existing records and its explicit public-copy publisher. */
+interface AdapterStorageApi extends Partial<ModuleStorageSources> {
+  readonly root: string;
+  readonly nativeSolidDocuments?: false;
+  publish(url: string): Promise<string>;
+  getPublicURL(url: string): Promise<string | undefined>;
+}
+
+/** Native documents retain their own sharing; adapter capabilities stay separate. */
+interface NativeStorageApi extends Partial<ModuleStorageSources> {
+  readonly root: string;
+  readonly nativeSolidDocuments: true;
+  readonly adapter: AdapterStorageApi;
+}
 
 /** The widget connection and the flashcards module's storage boundary. */
 export interface StorageConnection {
-  api?: {
-    publish(url: string): Promise<string>;
-    getPublicURL(url: string): Promise<string | undefined>;
-  };
+  readonly api?: AdapterStorageApi | NativeStorageApi;
   fetch: typeof globalThis.fetch;
   restore(): Promise<{ webId: string } | null>;
   onUser(listener: (user: { webId: string } | null) => void): () => void;
@@ -50,5 +64,23 @@ export function createRemoteStorageSession(connection: StorageConnection): Solid
       hasStoredSession: async () => Boolean(await connection.restore()),
       forgetStoredSession: logout,
     },
+  };
+}
+
+/** Select sharing at the document's original source after each widget restore. */
+export function createRemoteStoragePublishing(
+  connection: Pick<StorageConnection, "api">,
+): ModulePublishing {
+  const active = () => {
+    const api = connection.api;
+    return api?.nativeSolidDocuments ? api.adapter : api;
+  };
+  return {
+    handles: (url) => {
+      const api = connection.api;
+      return api?.nativeSolidDocuments !== true || url.startsWith(api.adapter.root);
+    },
+    publish: (url) => active()!.publish(url),
+    getPublicURL: (url) => active()!.getPublicURL(url),
   };
 }
