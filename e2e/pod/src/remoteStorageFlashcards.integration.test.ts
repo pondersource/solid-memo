@@ -10,7 +10,6 @@ import { runInNewContext } from "node:vm";
 import { describe, expect, inject, it } from "vitest";
 import { DataFactory, Parser, Store } from "n3";
 import { createContainerAt } from "@solid-memo/solid/client/resources";
-import { listContainer } from "@solid-memo/solid/containers";
 import { createSolidInstanceRepository } from "@solid-memo/solid/solidInstanceRepository";
 import { createSolidDeckRepository } from "@solid-memo/solid/solidDeckRepository";
 import { createSolidAnswerLog } from "@solid-memo/solid/solidAnswerLog";
@@ -59,6 +58,19 @@ const modules = runInNewContext(
   },
 ) as { Flashcards: { builder(client: object): { exports: ModuleApi } } };
 
+/** A real LDP listing supplies the remoteStorage client's record names.
+ * Keep this fixture independent of the app's selected Solid dataset client.
+ */
+async function listRecords(url: string, fetcher: typeof fetch): Promise<string[]> {
+  const response = await fetcher(url, { headers: { Accept: "text/turtle" } });
+  if (response.status === 404) return [];
+  if (!response.ok) throw new Error(`Listing adapter records: ${response.status}`);
+  const dataset = new Store(new Parser({ baseIRI: url }).parse(await response.text()));
+  return dataset
+    .getObjects(namedNode(url), namedNode("http://www.w3.org/ns/ldp#contains"), null)
+    .map((term) => term.value);
+}
+
 /** Actual JSON documents on the reference Pod, in the module's original record paths. */
 function storedClient(root: string) {
   const containers = new Set<string>();
@@ -95,7 +107,7 @@ function storedClient(root: string) {
     },
     async getListing(prefix = "") {
       const url = address(prefix);
-      const children = await listContainer(url, fetch);
+      const children = await listRecords(url, fetch);
       return Object.fromEntries(
         children.map((child) => [decodeURIComponent(child.slice(url.length)), {}]),
       );
@@ -193,7 +205,8 @@ for (const server of inject("solidServers"))
       });
       // Records from before bounded hash names keep their original encoded URL key.
       const resourcesRoot = root + "flashcards/_rs/resources/";
-      for (const address of await listContainer(resourcesRoot, fetch)) {
+      let seededLegacy = false;
+      for (const address of await listRecords(resourcesRoot, fetch)) {
         const key = "_rs/resources/" + decodeURIComponent(address.slice(resourcesRoot.length));
         const record = (await client.getObject(key)) as { url: string; resource: object };
         if (record.url !== oldDeck.cardsDocumentUrl) continue;
@@ -203,8 +216,10 @@ for (const server of inject("solidServers"))
           { ...record, extensionFromOlderApp: "keep" },
         );
         await client.remove(key);
+        seededLegacy = true;
       }
-      const recordPathsBefore = (await listContainer(resourcesRoot, fetch)).sort();
+      expect(seededLegacy).toBe(true);
+      const recordPathsBefore = (await listRecords(resourcesRoot, fetch)).sort();
 
       const native = adapter.nativeSolid({ fetch, webId, root });
       expect(native.adapter).toBe(adapter);
@@ -270,12 +285,12 @@ for (const server of inject("solidServers"))
       expect(
         await client.getObject("_rs/resources/" + encodeURIComponent(oldDeck.cardsDocumentUrl)),
       ).toMatchObject({ extensionFromOlderApp: "keep" });
-      expect((await listContainer(root + "flashcards/_rs/resources/", fetch)).sort()).toEqual(
+      expect((await listRecords(root + "flashcards/_rs/resources/", fetch)).sort()).toEqual(
         recordPathsBefore,
       );
       // A corrupt existing index is unknown data, never an absent collection.
       let corrupted = false;
-      for (const address of await listContainer(resourcesRoot, fetch)) {
+      for (const address of await listRecords(resourcesRoot, fetch)) {
         const key = "_rs/resources/" + decodeURIComponent(address.slice(resourcesRoot.length));
         const record = (await client.getObject(key)) as { url: string; resource: object };
         if (record.url !== adapter.root + "settings/privateTypeIndex") continue;
