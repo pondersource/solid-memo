@@ -1286,6 +1286,8 @@ export interface RepairRepository {
 
 /** Driven port: discovery of storage roots in the user's pod(s). */
 export interface StorageGateway {
+  /** Whether the active storage module owns this URL beyond advertised native storages. */
+  owns?(url: string): boolean;
   /**
    * All storages advertised for the WebID (profile pim:storage triples,
    * falling back to the server's Link-header discovery). May be empty.

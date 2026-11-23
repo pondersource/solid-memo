@@ -475,6 +475,15 @@ anonymous denial and recovery on a fresh browser. Those tests register a
 disposable public client with their issuer. A deployed app still needs
 its production issuer, public client and callback configured.
 
+The native-format Pod test loads the shipped flashcards module and uses
+Solid Memo's repository factories to create an instance, deck, card and
+study history. It edits through the module, then opens the same document
+URLs with a fresh upstream reader. It checks unknown predicates, sibling
+subjects and nested blank nodes, unchanged history and binary picture
+bytes, and updates to existing JSON adapter records at the same paths.
+The widget's Solid journey checks a native history write and a
+native release link, including private access and anonymous publication.
+
 Further journeys go through:
 
 - a deck added by link whose cards name pictures on its author's

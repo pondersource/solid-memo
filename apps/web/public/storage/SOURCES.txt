@@ -22,12 +22,13 @@ Additional fork providers are separate from that upstream review.
 
 modules.js:
 fork source: https://github.com/pondersource/data-modules
-source commit: 76405c535234bb62e77debe85ea7ec2a83b6ab1f
+source commit: 37f12156be89128f7bdb0f21471d680ede977b52
 upstream: https://github.com/solid-contrib/data-modules
 build in remotestorage/: npm ci --ignore-scripts && npm run build
 
-The Recipes, Movies and Flashcards modules own scope storage and read-only
-imports of existing Solid data. Internal RDF identifiers are not public links.
+The Recipes, Movies and Flashcards modules own scope storage. Flashcards
+preserves native Solid documents and retained adapter documents at their original
+URLs; native Solid sharing uses the Pod access-control implementation. Internal RDF identifiers are not public links.
 Public sharing copies only selected documents; private originals stay private.
 Third-party license notices are retained in the sibling *.LICENSE.txt files.
 
@@ -41,4 +42,4 @@ Acceptance tests supply a disposable client for their own CSS-LWS issuer.
 SHA-256:
 9e3d17d894765cb9eca44264ee700b8182f06f50a80139f19ca0599e178762db  rs.js
 7a070705f828684e16de500610ed8874c1c8943e8416e87babb7b6a810340bb6  widget.js
-5e85dc095d2c81adb1bb11ee168f04a7fddcc234d7b5fa3ce7c4134b64c22b63  modules.js
+53d048131917f6ffb377c2967699d790a220d003354710fda60b30019c5e9c04  modules.js

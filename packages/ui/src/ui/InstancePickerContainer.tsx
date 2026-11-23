@@ -3,13 +3,14 @@
 // SPDX-License-Identifier: MIT
 
 import type { ComponentChildren } from "preact";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseCases } from "@solid-memo/application/useCases";
 import { isGuestUrl } from "@solid-memo/domain/guest";
 import type { Instance, RegistrationTarget } from "@solid-memo/domain/instance";
 import { isInStorages } from "@solid-memo/domain/instanceLayout";
 import type { Session } from "@solid-memo/domain/session";
 import { useI18n } from "./i18n";
+import { isModuleStorage } from "./moduleStorage";
 import { InstancePicker } from "./InstancePicker";
 import { queryKeys } from "./queryKeys";
 
@@ -53,6 +54,17 @@ export function InstancePickerContainer({
     queryKey: queryKeys.storages(webId),
     queryFn: () => useCases.listStorages(session),
   });
+
+  const moduleInstances = instances.filter((instance) => isModuleStorage(instance.url));
+  const moduleOwnershipQueries = useQueries({
+    queries: moduleInstances.map((instance) => ({
+      queryKey: queryKeys.inOwnPod(instance.url),
+      queryFn: () => useCases.isInOwnPod(instance.url),
+    })),
+  });
+  const moduleOwnership = new Map(
+    moduleInstances.map((instance, index) => [instance.url, moduleOwnershipQueries[index]!]),
+  );
 
   const attachInstanceMutation = useMutation({
     mutationFn: (args: { url: string; target: RegistrationTarget }) =>
@@ -98,9 +110,15 @@ export function InstancePickerContainer({
       purpose={purpose}
       options={registrationOptionsQuery.data ?? null}
       removable={(instance) => !(session.guest === true && isGuestUrl(instance.url))}
-      deletable={(instance) => isInStorages(instance.url, storagesQuery.data ?? [])}
+      deletable={(instance) =>
+        isModuleStorage(instance.url)
+          ? moduleOwnership.get(instance.url)!.data === true
+          : isInStorages(instance.url, storagesQuery.data ?? [])
+      }
       outsidePod={(instance) =>
-        storagesQuery.data !== undefined && !isInStorages(instance.url, storagesQuery.data)
+        isModuleStorage(instance.url)
+          ? moduleOwnership.get(instance.url)!.data === false
+          : storagesQuery.data !== undefined && !isInStorages(instance.url, storagesQuery.data)
       }
       busy={
         attachInstanceMutation.isPending ||

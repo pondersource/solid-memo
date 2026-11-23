@@ -371,6 +371,7 @@ export function createInstanceUseCases({
       if (isGuestUrl(url)) return true;
       const signedIn = webId();
       if (signedIn === undefined) return false;
+      if (storageGateway.owns?.(url)) return true;
       const storages = await storageGateway.discoverStorages(signedIn);
       return storages.some((storage) => isDocumentIn(url, storage.url));
     },
@@ -387,7 +388,7 @@ export function createInstanceUseCases({
     },
     async deleteInstance(session, instance) {
       const storages = await storageGateway.discoverStorages(session.webId);
-      if (!isInStorages(instance.url, storages))
+      if (!storageGateway.owns?.(instance.url) && !isInStorages(instance.url, storages))
         throw new AppError("instanceOutsideStorages", { url: instance.url });
       return instanceRepository.deleteInstance({
         webId: session.webId,

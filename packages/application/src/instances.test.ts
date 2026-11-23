@@ -51,6 +51,26 @@ describe("instances", () => {
     vi.mocked(deps.storageGateway.discoverStorages).mockRejectedValue(new Error("offline"));
     await expect(useCases.isInOwnPod(inStorage)).rejects.toThrow("offline");
   });
+  it("keeps module-owned retained instances editable without adding them to storage choices", async () => {
+    const deps = makeDeps();
+    const retained = { url: "https://flashcards.storage.pondersource.invalid/kept/", name: "Kept" };
+    deps.storageGateway.owns = (url) =>
+      url.startsWith("https://flashcards.storage.pondersource.invalid/");
+    const useCases = createUseCases(deps);
+    expect(await useCases.listStorages(session)).toEqual([storage]);
+    expect(await useCases.isInOwnPod(retained.url)).toBe(true);
+    expect(await useCases.isInOwnPod("https://elsewhere.example/kept/")).toBe(false);
+    await useCases.deleteInstance(session, retained);
+    expect(deps.instanceRepository.deleteInstance).toHaveBeenCalledWith({
+      webId: session.webId,
+      instance: retained,
+    });
+    await expect(
+      useCases.deleteInstance(session, { ...retained, url: "https://elsewhere.example/kept/" }),
+    ).rejects.toMatchObject({ code: "instanceOutsideStorages" });
+    vi.mocked(deps.webId).mockReturnValue(undefined);
+    expect(await useCases.isInOwnPod(retained.url)).toBe(false);
+  });
   it("addManualStorage trims the URL before probing", async () => {
     const deps = makeDeps();
     const useCases = createUseCases(deps);

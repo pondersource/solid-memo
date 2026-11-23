@@ -2,6 +2,11 @@
 //
 // SPDX-License-Identifier: MIT
 
+import {
+  createModuleInstanceRepository,
+  moduleStorageRoots,
+  type ModuleStorage,
+} from "./moduleInstanceRepository";
 import { createUseCases, type UseCases } from "@solid-memo/application/useCases";
 import { createPodFence } from "@solid-memo/solid/podFence";
 import { createWriteFence } from "@solid-memo/solid/writeFence";
@@ -64,6 +69,8 @@ import { createTrialUseCases } from "./trialUseCases";
 export interface AppOptions {
   storageSession?: SolidSession;
   modulePublishing?: ModulePublishing;
+  /** Sources owned by the selected remoteStorage module, including retained records. */
+  moduleStorage?: ModuleStorage;
   /** The name the app gives itself when the user logs in (docs/authentication.md). */
   clientName: string;
   /** The Client ID Document the build wrote, if any: the client ID on the site it was written for (docs/authentication.md#the-client-id-document). */
@@ -91,6 +98,7 @@ export interface AppOptions {
 export function createAppUseCases({
   storageSession,
   modulePublishing,
+  moduleStorage,
   clientName,
   clientId,
   servedSite,
@@ -258,7 +266,8 @@ export function createAppUseCases({
   const changed = () => {
     folderRevision++;
   };
-  const storageGateway: typeof podStorages = {
+  const storageGateway: typeof podStorages & { owns(url: string): boolean } = {
+    owns: (url) => moduleStorageRoots(moduleStorage).some((root) => isInFolder(url, root)),
     ...podStorages,
     async probeStorage(url) {
       const storage = await podStorages.probeStorage(url);
@@ -284,7 +293,9 @@ export function createAppUseCases({
     if (foundStorages?.user !== user) {
       const storages = storageGateway
         .discoverStorages(user)
-        .then((found) => found.map(({ url }) => url));
+        .then((found) => [
+          ...new Set([...found.map(({ url }) => url), ...moduleStorageRoots(moduleStorage)]),
+        ]);
       // Only this user's find is forgotten: another's may have begun since.
       storages.catch(() => {
         if (foundStorages?.storages === storages) foundStorages = undefined;
@@ -302,12 +313,13 @@ export function createAppUseCases({
     randomId,
     userStorages,
   });
+  const moduleInstances = createModuleInstanceRepository(podInstances, moduleStorage);
   const instanceRepository: typeof podInstances = {
-    ...podInstances,
-    createInstance: (args) => podInstances.createInstance(args).finally(changed),
-    attachInstance: (args) => podInstances.attachInstance(args).finally(changed),
-    deleteInstance: (args) => podInstances.deleteInstance(args).finally(changed),
-    detachInstance: (args) => podInstances.detachInstance(args).finally(changed),
+    ...moduleInstances,
+    createInstance: (args) => moduleInstances.createInstance(args).finally(changed),
+    attachInstance: (args) => moduleInstances.attachInstance(args).finally(changed),
+    deleteInstance: (args) => moduleInstances.deleteInstance(args).finally(changed),
+    detachInstance: (args) => moduleInstances.detachInstance(args).finally(changed),
   };
   const podCopier = createSolidInstanceCopier({ fetch: podFetch });
   const instanceCopier: typeof podCopier = {
@@ -328,7 +340,7 @@ export function createAppUseCases({
    */
   async function ownStorages(webId: string): Promise<string[]> {
     const storages = await publicStorages.discoverStorages(webId).catch(() => []);
-    return [...storages.map(({ url }) => url), ...entered];
+    return [...storages.map(({ url }) => url), ...moduleStorageRoots(moduleStorage), ...entered];
   }
   /**
    * The folders of the user's own pod: their storages with the folders
@@ -344,7 +356,11 @@ export function createAppUseCases({
       settled(instanceRepository.listInstances(webId)),
     ]);
     return {
-      storages: [...storages.map(({ url }) => url), ...entered],
+      storages: [
+        ...storages.map(({ url }) => url),
+        ...moduleStorageRoots(moduleStorage),
+        ...entered,
+      ],
       instances: instances.map(({ url }) => url),
     };
   }

@@ -8119,11 +8119,13 @@ var PonderSourceModules = (() => {
   });
 
   // src/native-solid.js
-  function nativeSolidView({ fetch: authenticatedFetch, webId, root }, helpers, domain, permission = () => true) {
+  function nativeSolidView({ fetch: authenticatedFetch, webId, root, adapter }, helpers, domain, permission = () => true) {
     const pod = new URL(root);
     if (!pod.pathname.endsWith("/") || pod.search || pod.hash || pod.username || pod.password || !(pod.protocol === "https:" || pod.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(pod.hostname))) throw Error("Choose an HTTPS Solid Pod root (or localhost)");
+    if (typeof authenticatedFetch !== "function") throw Error("A Solid session fetch is required");
     const profile = new URL(webId);
     profile.hash = "";
+    if (profile.username || profile.password || !["https:", "http:"].includes(profile.protocol)) throw Error("Unsupported Solid identity URL");
     const scoped = async (input, init) => {
       const url = new URL(input instanceof Request ? input.url : String(input), pod);
       if (url.username || url.password || /%(?:2f|5c)/i.test(url.pathname) || !["https:", "http:"].includes(url.protocol)) throw Error("Unsupported Solid document URL");
@@ -8132,10 +8134,21 @@ var PonderSourceModules = (() => {
       if (!permission(read ? "r" : "rw")) return new Response(null, { status: 403 });
       if (!own && !read) return new Response(null, { status: 403 });
       if (own || url.href.split("#")[0] === profile.href) return authenticatedFetch(input instanceof Request ? input : url.href, init);
-      return globalThis.fetch(url.href, { method, credentials: "omit", headers: { Accept: new Headers(init?.headers).get("Accept") || "*/*" } });
+      return publicRead(input, init, pod);
     };
     const api = { ...helpers, nativeSolidDocuments: true, root: pod.href, webId, fetch: scoped };
+    if (adapter) Object.defineProperty(api, "adapter", { value: adapter, enumerable: true });
     return Object.assign(api, domain(api));
+  }
+  function publicRead(input, init, base) {
+    const request = new Request(input instanceof Request ? input : new URL(String(input), base), init);
+    if (!["GET", "HEAD"].includes(request.method)) return Promise.resolve(new Response(null, { status: 403 }));
+    return globalThis.fetch(request.url, {
+      method: request.method,
+      credentials: "omit",
+      signal: request.signal,
+      headers: { Accept: request.headers.get("Accept") || "*/*" }
+    });
   }
 
   // node_modules/n3/src/N3Lexer.js
@@ -11446,6 +11459,30 @@ var PonderSourceModules = (() => {
   };
   var flashcards_legacy_default = { name: "flashcards", builder: Flashcards };
 
+  // src/flashcards.js
+  function flashcardsDomain(api) {
+    const sources = () => {
+      const candidates = [api, api.adapter].filter(Boolean);
+      return candidates.filter((source, index) => candidates.findIndex((other) => other.webId === source.webId) === index);
+    };
+    return {
+      /** Identities whose type indexes should be read; native documents first. */
+      storageSources() {
+        return sources().map((source) => ({
+          webId: source.webId,
+          root: source.root,
+          ...source === api.adapter && source !== api ? { optional: true } : {}
+        }));
+      },
+      /** Keep registration changes in the type index that owns this instance. */
+      identityFor(url) {
+        const resource = new URL(url);
+        const source = sources().find(({ root }) => resource.href.startsWith(new URL(root).href));
+        return source?.webId;
+      }
+    };
+  }
+
   // src/solid-import.js
   var { namedNode: namedNode3, quad: quad3 } = N3DataFactory_default;
   var solid = "http://www.w3.org/ns/solid/terms#";
@@ -11557,6 +11594,11 @@ var PonderSourceModules = (() => {
         const { record } = await locate(url);
         if (!record) return void 0;
         const resource = { ...record.resource };
+        if (!["container", "rdf", "file"].includes(resource.kind) || typeof resource.etag !== "string") throw Error("Invalid module resource record");
+        if (resource.kind === "rdf" || resource.kind === "container" && resource.triples !== void 0) {
+          if (!Array.isArray(resource.triples) || resource.triples.some((line) => typeof line !== "string")) throw Error("Invalid stored RDF statements");
+          new N3Parser({ baseIRI: url }).parse(resource.triples.join("\n"));
+        }
         if (resource.kind === "file") resource.bytes = Uint8Array.from(atob(resource.base64), (c) => c.charCodeAt(0));
         delete resource.base64;
         return resource;
@@ -11638,10 +11680,25 @@ var PonderSourceModules = (() => {
   function createLocalPod({ root, store, newEtag }) {
     return async (input, init) => {
       const url = withoutFragment(String(input instanceof Request ? input.url : input));
-      const method = (init?.method ?? "GET").toUpperCase();
-      const headers = new Headers(init?.headers);
+      let method = (init?.method ?? "GET").toUpperCase();
+      let headers = new Headers(init?.headers);
+      let body = init?.body ?? null;
       if (!url.startsWith(root)) return answer(url, 404);
-      return store.exclusive(() => handle({ url, method, headers, body: init?.body ?? null }));
+      if (input instanceof Request) {
+        const request = new Request(input, init);
+        method = request.method;
+        headers = request.headers;
+        const type = (headers.get("Content-Type") || "").toLowerCase();
+        body = request.body === null ? null : method === "PATCH" || type.startsWith("text/turtle") ? await request.text() : await request.arrayBuffer();
+      }
+      try {
+        return await store.exclusive(() => handle({ url, method, headers, body }));
+      } catch (cause) {
+        if (cause instanceof TypeError || cause instanceof Error && cause.name === "AbortError") throw cause;
+        const error = new TypeError("The module storage request failed");
+        Object.defineProperty(error, "cause", { value: cause });
+        throw error;
+      }
     };
     async function handle(request) {
       const { url, method, headers } = request;
@@ -11712,16 +11769,17 @@ var PonderSourceModules = (() => {
     async function written(request, current) {
       const { url, method, headers } = request;
       const contentType = headers.get("Content-Type") ?? "";
+      const mediaType = contentType.split(";")[0].trim().toLowerCase();
       const text = typeof request.body === "string" ? request.body : null;
       if (method === "PATCH") {
-        if (!contentType.startsWith("application/sparql-update") && !contentType.startsWith("text/n3") || text === null)
+        if (mediaType !== "application/sparql-update" && mediaType !== "text/n3" || text === null)
           return answer(url, 415);
         if (current !== void 0 && current.kind !== "rdf") return answer(url, 409);
-        const triples = contentType.startsWith("text/n3") ? await n3Patched(url, current?.triples ?? [], text) : await patched(url, current?.triples ?? [], text);
+        const triples = mediaType === "text/n3" ? await n3Patched(url, current?.triples ?? [], text) : await patched(url, current?.triples ?? [], text);
         if (triples === null) return answer(url, 400);
         return { kind: "rdf", etag: newEtag(), triples };
       }
-      if (contentType.startsWith("text/turtle")) {
+      if (mediaType === "text/turtle") {
         const triples = await parsed(url, text ?? "");
         if (triples === null) return answer(url, 400);
         return { kind: "rdf", etag: newEtag(), triples: [...triples] };
@@ -12023,42 +12081,56 @@ var PonderSourceModules = (() => {
   }
 
   // src/connection.js
-  function connectApp(module, { RemoteStorage, Widget, apiKeys, element = "storage-widget" }) {
+  function connectApp(module, { RemoteStorage, Widget, apiKeys = {}, element = "storage-widget", widgetOptions = {}, nativeSolid = false }) {
     const rs = new RemoteStorage({ modules: [module] });
     rs.access.claim(module.name, "rw");
     rs.caching.enable("/" + module.name + "/");
     rs.setApiKeys(Object.fromEntries(Object.entries(apiKeys).filter(([name]) => name !== "onedrive" || rs.onedrive)));
-    const widget = new Widget(rs, { solidProviders: { allowAnyProvider: true }, skipInitial: true, leaveOpen: true });
+    const widget = new Widget(rs, { solidProviders: { allowAnyProvider: true }, skipInitial: true, leaveOpen: true, ...widgetOptions });
     const host = document.getElementById(element);
     Object.assign(host.style, { position: "fixed", bottom: "12px", left: "12px", zIndex: "1000" });
     widget.attach(element);
     const listeners = /* @__PURE__ */ new Set();
-    let preparing;
+    let preparing, activeApi, generation = 0;
     const ready = new Promise((resolve) => rs.on("ready", () => {
       useOAuthHome(rs);
       resolve();
     }));
     const prepare = () => preparing || (preparing = (async () => {
-      const api = rs[module.name];
-      api.configureSync(() => rs.startSync());
-      await api.initialize();
-      if (rs.backend === "solid") {
+      const current = generation, adapter = rs[module.name];
+      adapter.configureSync(() => rs.startSync());
+      let api = adapter;
+      if (rs.backend === "solid" && nativeSolid) {
         const session = rs.solid.getSession();
-        await api.migrateSolid(session.fetch.bind(session), session.info.webId, rs.solid.getPodURL() + module.name + "/_rs/");
+        if (!session?.info?.webId) throw Error("The Solid session has no identity");
+        api = adapter.nativeSolid({ fetch: session.fetch.bind(session), webId: session.info.webId, root: rs.solid.getPodURL() });
+      } else {
+        await adapter.initialize();
+        if (rs.backend === "solid") {
+          const session = rs.solid.getSession();
+          await adapter.migrateSolid(session.fetch.bind(session), session.info.webId, rs.solid.getPodURL() + module.name + "/_rs/");
+        }
       }
+      if (current !== generation) throw Error("The storage connection changed while it was opening");
+      activeApi = api;
+      const profile = api.webId.split("#")[0];
       return {
         webId: api.webId,
         name: rs.remote.userAddress || "My storage",
         cloaked: false,
-        writableProfileUrl: api.webId.split("#")[0],
+        writableProfileUrl: profile.startsWith(api.root) ? profile : void 0,
         storageUrls: [api.root],
-        privateTypeIndexUrl: api.root + "settings/privateTypeIndex"
+        ...api.nativeSolidDocuments ? {} : { privateTypeIndexUrl: api.root + "settings/privateTypeIndex" }
       };
     })());
     rs.on("connected", () => {
+      const current = ++generation;
+      preparing = void 0;
+      activeApi = void 0;
       prepare().then((user) => {
-        for (const listener of listeners) listener(user);
+        if (current === generation) for (const listener of listeners) listener(user);
       }).catch((error) => {
+        if (current !== generation) return;
         const message = document.createElement("p");
         message.setAttribute("role", "alert");
         message.textContent = "Storage could not be opened: " + error.message;
@@ -12066,13 +12138,17 @@ var PonderSourceModules = (() => {
       });
     });
     rs.on("disconnected", () => {
+      generation++;
       preparing = void 0;
+      activeApi = void 0;
       for (const listener of listeners) listener(null);
     });
     return {
       rs,
       widget,
-      api: rs[module.name],
+      get api() {
+        return activeApi || rs[module.name];
+      },
       ready,
       async restore() {
         await ready;
@@ -12090,11 +12166,11 @@ var PonderSourceModules = (() => {
         if (rs.connected) rs.disconnect();
       },
       fetch: (input, init) => {
-        const url = String(input instanceof Request ? input.url : input);
-        if (url.startsWith(rs[module.name].root)) return rs[module.name].fetch(input, init);
-        const method = (init?.method || (input instanceof Request ? input.method : "GET")).toUpperCase();
-        if (!["GET", "HEAD"].includes(method)) return Promise.resolve(new Response(null, { status: 403 }));
-        return globalThis.fetch(url, { ...init, method, credentials: "omit", headers: { Accept: new Headers(init?.headers).get("Accept") || "*/*" } });
+        const adapter = rs[module.name], api = activeApi || adapter;
+        const url = new URL(input instanceof Request ? input.url : String(input), api.root);
+        if (url.href.startsWith(adapter.root)) return adapter.fetch(input, init);
+        if (api.nativeSolidDocuments) return api.fetch(input, init);
+        return publicRead(input, init, api.root);
       }
     };
   }
@@ -12108,7 +12184,7 @@ var PonderSourceModules = (() => {
       privateClient.declareType("migration", { type: "object", properties: { complete: { type: "boolean" } }, required: ["complete"] });
       const api = {
         ...helpers,
-        nativeSolid: (context) => nativeSolidView(context, helpers, domain, (mode) => privateClient.storage?.access ? privateClient.storage.access.checkPermission(name, mode) : true),
+        nativeSolid: (context) => nativeSolidView({ ...context, adapter: api }, helpers, domain, (mode) => privateClient.storage?.access ? privateClient.storage.access.checkPermission(name, mode) : true),
         ...publicResources({ privateClient, publicClient, store, root }),
         async migrateSolid(fetcher, webId, excludePrefix) {
           if ((await privateClient.getObject("_rs/migration"))?.complete) return;
@@ -12140,17 +12216,16 @@ var PonderSourceModules = (() => {
   }
   var Recipes = dataModule("recipes", ["https://schema.org/Recipe"], { parseRecipes });
   var Movies = dataModule("movies", ["https://schema.org/Movie", "https://schema.org/WatchAction"], { parseMovies });
-  var FlashcardsRdf = dataModule("flashcards", ["https://solid-memo.com/ns/vocab/v1.ttl#Instance"]);
+  var FlashcardsRdf = dataModule("flashcards", ["https://solid-memo.com/ns/vocab/v1.ttl#Instance"], {}, flashcardsDomain);
   var Flashcards2 = { name: "flashcards", builder(client, publicClient) {
     const legacy = flashcards_legacy_default.builder(client).exports;
-    return { exports: {
-      ...legacy,
-      ...FlashcardsRdf.builder(client, publicClient).exports,
-      async listGroups() {
-        const groups = await client.getListing();
-        return Object.fromEntries(Object.entries(groups || {}).filter(([key]) => key.endsWith("/") && key !== "_rs/"));
-      }
-    } };
+    const api = FlashcardsRdf.builder(client, publicClient).exports;
+    for (const [key, value] of Object.entries(legacy)) if (!(key in api)) api[key] = value;
+    api.listGroups = async () => {
+      const groups = await client.getListing();
+      return Object.fromEntries(Object.entries(groups || {}).filter(([key]) => key.endsWith("/") && key !== "_rs/"));
+    };
+    return { exports: api };
   } };
   return __toCommonJS(index_exports);
 })();

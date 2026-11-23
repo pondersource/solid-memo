@@ -19,10 +19,12 @@ async function connect(page: Page, server: string, account: CssAccount) {
   await page.locator("#password").fill(account.password);
   await page.getByRole("button", { name: "Log in", exact: true }).click();
   await page.getByRole("button", { name: /authorize|consent/i }).click();
-  await expect(page.getByRole("banner")).toContainText("Logged in as My storage");
+  const banner = page.getByRole("banner");
+  await expect(banner).toContainText("Logged in as");
+  await expect(banner.locator(`a[href="${account.webId}"]`)).toBeVisible();
 }
 
-test("@reload @rs-modules widget and flashcards module retain a deck, cards and study on a fresh device", async ({
+test("@reload @rs-modules widget and flashcards module retain native Solid documents on a fresh device", async ({
   app,
   account,
   server,
@@ -47,8 +49,9 @@ test("@reload @rs-modules widget and flashcards module retain a deck, cards and 
   const saved = app.page.waitForResponse(
     (response) =>
       response.ok() &&
-      response.request().method() === "PUT" &&
-      response.url().includes("/flashcards/_rs/resources/") &&
+      ["PUT", "PATCH"].includes(response.request().method()) &&
+      response.url().startsWith(account.pod) &&
+      /\/history\/\d{4}-\d{2}\.ttl$/.test(response.url()) &&
       (response.request().postData() || "").includes("Answer"),
   );
   await app.decks.study("Module vocabulary");
@@ -86,7 +89,7 @@ test("@reload @rs-modules widget and flashcards module retain a deck, cards and 
   await publishing
     .getByRole("button", { name: fresh.t("studio.publish.publish"), exact: true })
     .click();
-  const publicLink = publishing.locator('a[href*="/public/flashcards/"]');
+  const publicLink = publishing.locator(`a[href^="${account.pod}"][href*="/releases/"]`);
   await expect(publicLink).toBeVisible({ timeout: 30000 });
   const publicUrl = (await publicLink.getAttribute("href"))!;
   const anyone = await playwright.request.newContext();
