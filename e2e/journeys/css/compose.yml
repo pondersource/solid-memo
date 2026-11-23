@@ -9,7 +9,8 @@
 # so that address reaches Caddy from the server too: it dereferences the
 # WebIDs it verifies tokens of, which are there. The server stores its
 # pods in files (tmpfs): its in-memory store mangles PATCHed text that is
-# not ASCII. The harness (../harness/cssServer.ts) sets E2E_PORT; Renovate
+# not ASCII. AtomicFileDataAccessor keeps an interrupted upload from truncating
+# an existing document. The harness (../harness/cssServer.ts) sets E2E_PORT; Renovate
 # keeps the server on 7.
 services:
   tls:
@@ -28,7 +29,8 @@ services:
     pids_limit: 256
   server:
     image: solidproject/community-server:7.3.0@sha256:58073541889f0cd113dc482b4ddbb834bcd39463dc077d49fd1cf9f55337c4b6
-    command: ["-c", "config/file.json", "-f", "/data", "-b", "https://127.0.0.1:${E2E_PORT:?}/", "-l", "info"]
+    command: ["-c", "/config/atomic-file.json", "-f", "/data", "-b", "https://127.0.0.1:${E2E_PORT:?}/", "-l", "info"]
+    volumes: ["./atomic-file.json:/config/atomic-file.json:ro"]
     network_mode: "service:tls"
     depends_on: [tls]
     # Caddy's CA is made as it starts, and this server is thrown away after

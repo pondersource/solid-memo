@@ -434,8 +434,17 @@ only with https WebIDs and issuers, so the server sits behind Caddy at
 `https://127.0.0.1:<port>/` with Caddy's own certificate, which the
 browser accepts. Sharing Caddy's network, the server reaches its own
 https address to read the WebIDs it checks tokens for. It keeps its pods
-in files, as the journeys PATCH Swedish text (see above). The journeys
-need Docker and the browsers
+in files, as the journeys PATCH Swedish text (see above). Its
+[atomic-file configuration](../e2e/journeys/css/atomic-file.json) selects
+`AtomicFileDataAccessor`: an upload goes to a temporary file and replaces
+the document only after its stream finishes. A page reload can interrupt
+a remoteStorage upload. CSS 7's default `FileDataAccessor` opens the
+existing file before reading the upload, so that interruption can leave
+it empty or incomplete. The fixture checks the atomic configuration;
+it doesn't certify other file configurations or crash safety across
+data and metadata.
+
+The journeys need Docker and the browsers
 (`npm run browsers -w @solid-memo/e2e-journeys` installs Chromium,
 Firefox and WebKit, with their system libraries). CI runs them as a gate
 ([below](#deterministic-and-timing-dependent-jobs)).
@@ -444,10 +453,12 @@ Firefox and WebKit, with their system libraries). CI runs them as a gate
 `css-lws-only`, the advisory servers above with Linked Web Storage, as
 their signed-in instances behind TLS
 ([harness/journeyServer.ts](../e2e/journeys/harness/journeyServer.ts)),
-from the image e2e/pod builds. The app signs in to them only when built
-with `SOLID_CLIENT=solid-memo-client` ([lws.md](lws.md#how-its-tested)).
-The Interop workflow runs Chromium's journeys on both and reports them,
-as it does the pod tests: they gate nothing. A job fails only when no
+from the image e2e/pod builds. Their native Pod journeys use
+`STORAGE_COMPOSITION=native-interop` and `SOLID_CLIENT=solid-memo-client`
+([configuration.md](configuration.md#storage_composition),
+[lws.md](lws.md#how-its-tested)).
+The Interop workflow runs those native journeys on both and reports them,
+as it does the advisory pod tests. A native job fails only when no
 journey ran, or a journey fails that
 `e2e/journeys/servers/<id>/expected-failures.json`
 (`{ "<file> > <journey>": "<cause>" }`, the journey named by its file,
@@ -457,6 +468,12 @@ tests' causes, and `e2e/pod/interop.test.ts` keeps the lists and the
 page in step. [harness/compare.ts](../e2e/journeys/harness/compare.ts)
 names these in the job's summary, with what passes though listed and
 the expected failures by cause.
+
+Separate widget jobs use the default remoteStorage composition. Every
+assertion must pass: the real issuer's login and consent, private writes,
+anonymous denial and recovery on a fresh browser. Those tests register a
+disposable public client with their issuer. A deployed app still needs
+its production issuer, public client and callback configured.
 
 Further journeys go through:
 
