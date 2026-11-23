@@ -109,6 +109,37 @@ describe("the bundle", () => {
     );
     expect(withSinks).toEqual(["preact/dist/preact.mjs"]);
   });
+
+  it("builds native interoperability without initializing the product's storage widget", async () => {
+    const previous = process.env.STORAGE_COMPOSITION;
+    process.env.STORAGE_COMPOSITION = "native-interop";
+    try {
+      const result = (await build({
+        configFile: resolve(import.meta.dirname, "../vite.config.ts"),
+        root: resolve(import.meta.dirname, ".."),
+        logLevel: "silent",
+        build: { write: false },
+      })) as Rolldown.RolldownOutput;
+      const page = result.output.find(
+        (item): item is Rolldown.OutputAsset => item.fileName === "index.html",
+      )!;
+      const native = new browser.DOMParser().parseFromString(String(page.source), "text/html");
+      expect(native.getElementById("storage-widget")).toBeNull();
+      expect([...native.scripts].some((script) => script.src.includes("/storage/"))).toBe(false);
+      expect(
+        result.output
+          .filter((item): item is Rolldown.OutputChunk => item.type === "chunk")
+          .some((chunk) => chunk.code.includes("ponderStorage")),
+      ).toBe(false);
+      expect(dom.getElementById("storage-widget")).not.toBeNull();
+      expect([...dom.scripts].some((script) => script.src.endsWith("/storage/start.js"))).toBe(
+        true,
+      );
+    } finally {
+      if (previous === undefined) delete process.env.STORAGE_COMPOSITION;
+      else process.env.STORAGE_COMPOSITION = previous;
+    }
+  });
 });
 
 const chunkNamed = (fileName: string) => chunks.find((chunk) => chunk.fileName === fileName)!;

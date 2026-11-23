@@ -12,6 +12,7 @@ build without Chromium skip the docs' diagrams.
 | [`VITE_POD_PROVIDERS`](#vite_pod_providers) | the list in [podProvider.ts](../packages/domain/src/podProvider.ts) | The Pod providers suggested at login and for creating a Pod. |
 | [`VITE_LIBRARY_INDEX_URL`](#vite_library_index_url) | the site's own `decks/index.ttl` | The deck library the app lists. |
 | [`DOCS_DIAGRAMS`](#docs_diagrams) | unset: every diagram drawn | `skip`: the docs built without their diagrams. |
+| [`STORAGE_COMPOSITION`](#storage_composition) | `remotestorage` | The product's shared storage widget, or the native interoperability build. |
 
 [apps/web/.env.example](../apps/web/.env.example) gives an example of
 each `VITE_` one.
@@ -71,6 +72,22 @@ default:
 Turbo caches the build: [apps/web/turbo.json](../apps/web/turbo.json)
 lists `VITE_*` under `env` and the `.env*` files under `inputs`, so a
 new value rebuilds.
+
+## STORAGE_COMPOSITION
+
+The Ponder Source product uses `remotestorage`: the shared storage
+widget and the flashcards data module. This is the default.
+
+The Interop workflow sets `native-interop` to build the original
+Solid session and login screens with the client `SOLID_CLIENT` names.
+That build loads no widget scripts and makes no remoteStorage
+connection. It keeps the native Pod journeys' data and safety checks
+on their own storage path. A separate widget journey checks the
+product's configured LWS connection. This test build isn’t the site
+deployed for users. Unknown values fail the build.
+
+Turbo includes this variable in the web build and test hashes, so a
+native build can’t reuse a product build from its cache.
 
 ## VITE_APP_NAME
 

@@ -13,6 +13,9 @@ import { clientIdPlugin } from "@solid-memo/site/clientId";
 import { siteMapPlugin, siteOrigin } from "@solid-memo/site/siteMap";
 import { siteConfig, siteHtml, type SiteConfig } from "./src/config.ts";
 import { solidClientPlugin } from "../../scripts/solidClient.ts";
+import { storageComposition, storageCompositionHtml } from "./src/storageComposition.ts";
+
+const composition = storageComposition(process.env.STORAGE_COMPOSITION);
 
 /**
  * The settings the page reads (docs/configuration.md), checked as the
@@ -28,8 +31,14 @@ function siteSettings(): Plugin<{ settings(): SiteConfig }> {
     configResolved(config) {
       settings = siteConfig(config.env);
     },
-    transformIndexHtml(html) {
-      return siteHtml(html, { ...settings, version: appVersion() });
+    transformIndexHtml: {
+      order: "pre",
+      handler(html) {
+        return storageCompositionHtml(
+          siteHtml(html, { ...settings, version: appVersion() }),
+          composition,
+        );
+      },
     },
   };
 }
@@ -39,7 +48,7 @@ const settings = siteSettings();
 const origin = siteOrigin(`${REPOSITORY_ROOT}CNAME`);
 
 export default defineConfig({
-  define: siteDefines({ origin }),
+  define: { ...siteDefines({ origin }), __NATIVE_INTEROP__: composition === "native-interop" },
   base: "./",
   plugins: [
     solidClientPlugin(),

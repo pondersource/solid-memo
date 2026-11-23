@@ -13,6 +13,9 @@ declare const __SHAPES_RULESET__: string;
 /** The address of the Client ID Document the build wrote on the domain in CNAME (vite.config.ts); null without one. */
 declare const __CLIENT_ID__: string | null;
 
+/** Only the explicit interoperability build uses the native Solid session and its original UI. */
+declare const __NATIVE_INTEROP__: boolean;
+
 interface ImportMetaEnv {
   /** The deck library's index, read by src/config.ts; the site's own, decks/index.ttl, when unset (docs/deck-library.md). */
   readonly VITE_LIBRARY_INDEX_URL?: string;
