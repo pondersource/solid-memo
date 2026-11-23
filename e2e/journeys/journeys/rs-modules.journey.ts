@@ -22,7 +22,7 @@ async function connect(page: Page, server: string, account: CssAccount) {
   await expect(page.getByRole("banner")).toContainText("Logged in as My storage");
 }
 
-test("@reload widget and flashcards module retain a deck, cards and study on a fresh device", async ({
+test("@reload @rs-modules widget and flashcards module retain a deck, cards and study on a fresh device", async ({
   app,
   account,
   server,

@@ -8,6 +8,7 @@
     "pages",
     "flows",
     "journeys",
+    "widget",
     "screenshots",
     "*.ts"
   ]

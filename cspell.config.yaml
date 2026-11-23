@@ -184,6 +184,8 @@ words:
   - rdfjs
   - rdflib
   - Rijksmuseum
+  # The strict storage-composition value.
+  - remotestorage
   - roughjs
   - sankey
   - Segoe

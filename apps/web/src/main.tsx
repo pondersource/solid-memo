@@ -33,9 +33,11 @@ declare global {
   }
 }
 
+const storage = __NATIVE_INTEROP__ ? undefined : window.ponderStorage;
 const useCases = createAppUseCases({
-  storageSession: createRemoteStorageSession(window.ponderStorage),
-  modulePublishing: window.ponderStorage.api,
+  ...(storage
+    ? { storageSession: createRemoteStorageSession(storage), modulePublishing: storage.api }
+    : {}),
   // The name the identity provider shows when the user logs in.
   clientName: config.appName,
   // The Client ID Document the build wrote on the domain in CNAME, if any (docs/authentication.md).
@@ -78,11 +80,14 @@ render(
   >
     <QueryClientProvider client={queryClient}>
       <App
-        connectStorage={() => window.ponderStorage.open()}
-        subscribeStorage={(listener) =>
-          window.ponderStorage.onUser((user) => {
-            if (user) listener();
-          })
+        connectStorage={storage ? () => storage.open() : undefined}
+        subscribeStorage={
+          storage
+            ? (listener) =>
+                storage.onUser((user) => {
+                  if (user) listener();
+                })
+            : undefined
         }
         useCases={useCases}
         source={source}

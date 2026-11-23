@@ -1,0 +1,25 @@
+{
+  "@context": "https://linkedsoftwaredependencies.org/bundles/npm/@solid/community-server/^7.0.0/components/context.jsonld",
+  "import": [
+    "css:config/file.json"
+  ],
+  "@graph": [
+    {
+      "@id": "urn:solid-memo:e2e:atomic-file-accessor",
+      "@type": "Override",
+      "overrideInstance": {
+        "@id": "urn:solid-server:default:FileDataAccessor"
+      },
+      "overrideParameters": {
+        "@type": "AtomicFileDataAccessor",
+        "resourceMapper": {
+          "@id": "urn:solid-server:default:FileIdentifierMapper"
+        },
+        "rootFilePath": {
+          "@id": "urn:solid-server:default:variable:rootFilePath"
+        },
+        "tempFilePath": "/.internal/tempFiles/"
+      }
+    }
+  ]
+}

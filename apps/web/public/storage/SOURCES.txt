@@ -1,26 +1,44 @@
 PonderSource storage runtime sources
 
-rs.js: https://github.com/remotestorage/remotestorage.js
-commit: 92e1fc4dc0526d5c29bfef11dfc2bf9ad646347d
-build: npm ci && npm run build:solid
+rs.js:
+fork source: https://github.com/pondersource/remotestorage.js
+source commit: 27fda517eceda07c3a2df085a129ddd531272993
+source tree SHA-256: 24759f5b278cfcf60677e01277f4b441e35f31f77852f7739a95035f305eaa48
+upstream: https://github.com/remotestorage/remotestorage.js
+archive: remotestoragejs-2.0.0-beta.10-pondersource.7-preview.6.tgz
+archive SHA-256: 7233726e69373aad58d67996607a3e3e90ece9ed5e2f5fe793c21f9d65736da3
+archive artifact: package/release/remotestorage-all.js
 
-widget.js: https://github.com/pondersource/remotestorage-widget
-commit: 5ad6a05472acf7a5368d18cccd9a2349dc368b1c
-upstream PR: https://github.com/remotestorage/remotestorage-widget/pull/136
+widget.js:
+fork source: https://github.com/pondersource/remotestorage-widget
+source commit: 045c78cd752593e58fffed7386ddcbb4ba74dd2e
+source tree SHA-256: 40bb0fb37ff5a39db1f97adf373de3e4a5c382fba979f402ef77b080e291a076
+upstream: https://github.com/remotestorage/remotestorage-widget
+archive: remotestorage-widget-1.8.2-pondersource.2-preview.6.tgz
+archive SHA-256: eafb7f42f449e6fc50e9d717284eee7fabb3dd89d54a09783b44812e30f95b05
+archive artifact: package/build/widget.js
+The Solid widget review is https://github.com/remotestorage/remotestorage-widget/pull/136.
+Additional fork providers are separate from that upstream review.
 
-modules.js: https://github.com/pondersource/data-modules
-commit: 8f91abc2f7ce098e94a20a9cb6da44f490c935f1
-build in remotestorage/: npm ci && npm run build
+modules.js:
+fork source: https://github.com/pondersource/data-modules
+source commit: 76405c535234bb62e77debe85ea7ec2a83b6ab1f
+upstream: https://github.com/solid-contrib/data-modules
+build in remotestorage/: npm ci --ignore-scripts && npm run build
 
 The Recipes, Movies and Flashcards modules own scope storage and read-only
 imports of existing Solid data. Internal RDF identifiers are not public links.
 Public sharing copies only selected documents; private originals stay private.
+Third-party license notices are retained in the sibling *.LICENSE.txt files.
 
 Google/Dropbox callback: this app's HTTPS origin without a trailing slash.
 Google also needs the app origin registered as a JavaScript origin.
 Google and Dropbox return to the home route; Solid restores the previous route.
+OneDrive also needs this app's callback registered in its public SPA registration.
+LWS OpenID requires a chosen production issuer, public client and registered callback.
+Acceptance tests supply a disposable client for their own CSS-LWS issuer.
 
 SHA-256:
-941812bef9b9e42d10a7f8313545fa8b207dc572c786fce5ff0983d3ae888089  rs.js
-82804aecac733b7aa1ec8163dc0f5adecee82f007b0affb73b841495c9205937  widget.js
-c52e037f4c17bba04d609fb5abf2f219dc147884d9b0275052628132e156e9ea  modules.js
+9e3d17d894765cb9eca44264ee700b8182f06f50a80139f19ca0599e178762db  rs.js
+7a070705f828684e16de500610ed8874c1c8943e8416e87babb7b6a810340bb6  widget.js
+5e85dc095d2c81adb1bb11ee168f04a7fddcc234d7b5fa3ce7c4134b64c22b63  modules.js
