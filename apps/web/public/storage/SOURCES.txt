@@ -11,11 +11,11 @@ archive artifact: package/release/remotestorage-all.js
 
 widget.js:
 fork source: https://github.com/pondersource/remotestorage-widget
-source commit: 4857d1b236d159d9b00c2f18792851cacc70593e
-source tree SHA-256: 85b93b6de006b455b1bd7c170dc6b07cc211aa67019bb36513d11077d31f3491
+source commit: 14acf28d44851a5984dbfa91ba71e35a5b3a0b79
+source tree SHA-256: 7f24b8179085c099506bfc2e05086098c667f3801c13d5bc230613c767d1640d
 upstream: https://github.com/remotestorage/remotestorage-widget
-archive: remotestorage-widget-1.8.2-pondersource.4-preview.9.tgz
-archive SHA-256: 8b1b333d5f32d6300819c7b3e37bb4bb7da3defe8e7e6a71e9bcda2e6e813817
+archive: remotestorage-widget-1.8.2-pondersource.5-preview.10.tgz
+archive SHA-256: 653c25a10b79190b936649f07f6b6c71c1f44cddf1ba9441c66e3eec215ab0f6
 archive artifact: package/build/widget.js
 The Solid widget review is https://github.com/remotestorage/remotestorage-widget/pull/136.
 Additional fork providers are separate from that upstream review.
@@ -41,5 +41,5 @@ Acceptance tests supply a disposable client for their own CSS-LWS issuer.
 
 SHA-256:
 88de6672376fc2d5a38cdd2ba0320c095e0d7987e35ad5d7e6fbb996a68b3065  rs.js
-500fb7d0419a8c39c72869d9d37d4c4c2daf4f2e359156c4e1294559e6a9834c  widget.js
+75eff3c1342f85ca178d3ff34bcd55c1b10d93826f32ed6f1c2d81fc34726c45  widget.js
 53d048131917f6ffb377c2967699d790a220d003354710fda60b30019c5e9c04  modules.js
