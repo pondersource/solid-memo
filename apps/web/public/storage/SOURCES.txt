@@ -2,20 +2,20 @@ PonderSource storage runtime sources
 
 rs.js:
 fork source: https://github.com/pondersource/remotestorage.js
-source commit: 2517fe04cd66f27c430ec451167efd6b0c73393d
-source tree SHA-256: 24759f5b278cfcf60677e01277f4b441e35f31f77852f7739a95035f305eaa48
+source commit: 47cf02b312902298efcbfc8c7c6cd1bfb637e11c
+source tree SHA-256: 0bbb41e92a042947ba9935083efdf68681b44e18341e0a180b065587d7a8ac10
 upstream: https://github.com/remotestorage/remotestorage.js
-archive: remotestoragejs-2.0.0-beta.10-pondersource.7-preview.6.tgz
-archive SHA-256: 7233726e69373aad58d67996607a3e3e90ece9ed5e2f5fe793c21f9d65736da3
+archive: remotestoragejs-2.0.0-beta.10-pondersource.9-preview.9.tgz
+archive SHA-256: 60ae5c01cf5bedf51651f5e0743cc5399b3ea32fdbbdd52a228b3532833902a8
 archive artifact: package/release/remotestorage-all.js
 
 widget.js:
 fork source: https://github.com/pondersource/remotestorage-widget
-source commit: 18a22cf75e54bef68620c7e6968b38fc3e4c20bf
-source tree SHA-256: 40bb0fb37ff5a39db1f97adf373de3e4a5c382fba979f402ef77b080e291a076
+source commit: 14acf28d44851a5984dbfa91ba71e35a5b3a0b79
+source tree SHA-256: 7f24b8179085c099506bfc2e05086098c667f3801c13d5bc230613c767d1640d
 upstream: https://github.com/remotestorage/remotestorage-widget
-archive: remotestorage-widget-1.8.2-pondersource.2-preview.6.tgz
-archive SHA-256: eafb7f42f449e6fc50e9d717284eee7fabb3dd89d54a09783b44812e30f95b05
+archive: remotestorage-widget-1.8.2-pondersource.5-preview.10.tgz
+archive SHA-256: 653c25a10b79190b936649f07f6b6c71c1f44cddf1ba9441c66e3eec215ab0f6
 archive artifact: package/build/widget.js
 The Solid widget review is https://github.com/remotestorage/remotestorage-widget/pull/136.
 Additional fork providers are separate from that upstream review.
@@ -40,6 +40,6 @@ LWS OpenID requires a chosen production issuer, public client and registered cal
 Acceptance tests supply a disposable client for their own CSS-LWS issuer.
 
 SHA-256:
-b38d6acff0ad303b0ec484e52781a528c3bbd21cea4efce3f51013d440e88030  rs.js
-ba56426df06e42c218cde6f3e2d108229d1c18f190c078aa424c50d4960ed417  widget.js
+88de6672376fc2d5a38cdd2ba0320c095e0d7987e35ad5d7e6fbb996a68b3065  rs.js
+75eff3c1342f85ca178d3ff34bcd55c1b10d93826f32ed6f1c2d81fc34726c45  widget.js
 53d048131917f6ffb377c2967699d790a220d003354710fda60b30019c5e9c04  modules.js
