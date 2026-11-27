@@ -2,16 +2,16 @@
   "status": "experimental fork preview; source and artifact provenance",
   "artifacts": {
     "rs.js": "88de6672376fc2d5a38cdd2ba0320c095e0d7987e35ad5d7e6fbb996a68b3065",
-    "widget.js": "75eff3c1342f85ca178d3ff34bcd55c1b10d93826f32ed6f1c2d81fc34726c45",
+    "widget.js": "40f02559d3be61d1efca9672e28bac906cf7045396e7058b163ac30cd9ad8717",
     "modules.js": "53d048131917f6ffb377c2967699d790a220d003354710fda60b30019c5e9c04"
   },
   "sourceBases": {
     "remotestorage.js": "47cf02b312902298efcbfc8c7c6cd1bfb637e11c",
-    "remotestorage-widget": "14acf28d44851a5984dbfa91ba71e35a5b3a0b79",
+    "remotestorage-widget": "bce15da652105ddfcface5463b31468559b7c356",
     "data-modules": "37f12156be89128f7bdb0f21471d680ede977b52"
   },
   "sourceSha256": {
     "remotestorage.js": "0bbb41e92a042947ba9935083efdf68681b44e18341e0a180b065587d7a8ac10",
-    "remotestorage-widget": "7f24b8179085c099506bfc2e05086098c667f3801c13d5bc230613c767d1640d"
+    "remotestorage-widget": "11d8a22991ef563e989f4161b1679b176349258d397769bb54dfb5835647da0d"
   }
 }
