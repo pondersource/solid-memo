@@ -160,6 +160,8 @@ jobs:
       # check's (docs/testing.md#documentation).
       - id: lints
         run: npm run check:lints
+      - name: Check the Atomic flashcard view
+        run: node --test atomic/view.test.mjs
       # Every package: typecheck, tests at 100% coverage, the round trip
       # of the library's releases, generated code and Turtle formatting
       # in step with their sources.
