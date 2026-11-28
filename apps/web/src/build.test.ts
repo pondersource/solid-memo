@@ -278,6 +278,8 @@ describe("the page's Content Security Policy", () => {
   it("lets the site's own scripts run, and each inline one by its hash", () => {
     const allowed = policy().get("script-src")!;
     expect(allowed).toContain("'self'");
+    expect(allowed).toContain("'wasm-unsafe-eval'");
+    expect(allowed).not.toContain("'unsafe-eval'");
     // Every script without a src runs inline, whatever its attributes, but data
     // (a JSON-LD block) is never run.
     const scripts = [...dom.scripts];
@@ -288,7 +290,7 @@ describe("the page's Content Security Policy", () => {
     expect(allowed.filter((source) => source.startsWith("'sha256-"))).toEqual(inline);
     for (const script of scripts.filter((script) => script.hasAttribute("src")))
       expect(script.getAttribute("src")).toMatch(
-        /^\.\/(?:assets\/|storage\/(?:rs|widget|modules|start)\.js$)/,
+        /^\.\/(?:assets\/|storage\/(?:rs|widget|modules|start|atomic-sdk-loader)\.js$)/,
       );
   });
 
