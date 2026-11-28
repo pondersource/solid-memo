@@ -10,7 +10,7 @@
        <base>, no form posted anywhere. Pictures come from pods, so img-src
        stays open; style-src waits on the inline styles of src/ui. -->
   <meta http-equiv="Content-Security-Policy"
-    content="script-src 'self' 'sha256-o/OkTyg5paAjpiXKPEbN6jdtH/hBgznG3HB8dXsFsCU='; object-src 'none'; base-uri 'none'; form-action 'none'" />
+    content="script-src 'self' 'wasm-unsafe-eval' 'sha256-o/OkTyg5paAjpiXKPEbN6jdtH/hBgznG3HB8dXsFsCU='; object-src 'none'; base-uri 'none'; form-action 'none'" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Spaced-repetition flashcards that live in your own Solid pod." />
   <!-- The site's version, from the root package.json, put in by
@@ -172,6 +172,7 @@
   <!-- storage-modules:start -->
   <div id="storage-widget"></div>
   <script src="./storage/rs.js"></script>
+  <script src="./storage/atomic-sdk-loader.js"></script>
   <script src="./storage/widget.js"></script>
   <script src="./storage/modules.js"></script>
   <script src="./storage/start.js"></script>
